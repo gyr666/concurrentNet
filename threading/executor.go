@@ -22,3 +22,7 @@ type Task struct {
 }
 
 type ExecTask func(...interface{}) interface{}
+
+type Furture interface{
+	get() interface{}
+}

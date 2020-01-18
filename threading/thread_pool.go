@@ -3,12 +3,17 @@ package threading
 import "time"
 
 type PoolType uint8
+type ControlType uint8
 
 const (
 	STOP     PoolType = 1
 	RUNNING  PoolType = 1 << 1
 	WAITING  PoolType = 1 << 2
 	BLOCKING PoolType = 1 << 3
+)
+const (
+	STOPANY  ControlType = 1
+	STOPALL  ControlType = 1 << 1
 )
 
 type ThreadPool interface {
@@ -22,6 +27,7 @@ type threadpoolImpl struct {
 	status    uint8
 	core      int
 	workQueue chan *Task
+	contorlChannel chan int
 }
 
 func (t *threadpoolImpl) Boot() {
@@ -31,6 +37,13 @@ func (t *threadpoolImpl) Boot() {
 				select {
 				case task := <-t.workQueue:
 					task.rev = task.t(task.param)
+				case op   := <-t.contorlChannel:
+					if op == STOPANY {
+						return
+					}else if == STOPALL {
+						t.controlChannel <- STOPALL
+						return
+					}
 				}
 			}
 		}()
@@ -38,6 +51,9 @@ func (t *threadpoolImpl) Boot() {
 
 }
 
+func (t *threadpoolImpl) Shutdown() {
+	t.contorlChannel <- 
+}
 func (t *threadpoolImpl) addQueue(task *Task) {
 	t.workQueue <- task
 }
@@ -47,7 +63,7 @@ func (t *threadpoolImpl) Exec(f func()) {
 		return nil
 	}})
 }
-func (t *threadpoolImpl) Execwr(f func() interface{}) {
+func (t *threadpoolImpl) Execwr(f func() interface{}) Furture {
 	t.addQueue(&Task{param: nil, t: func(i ...interface{}) interface{} {
 		return f()
 	}})
@@ -58,6 +74,6 @@ func (t *threadpoolImpl) EXecwp(f func(...interface{}), p ...interface{}) {
 		return nil
 	}})
 }
-func (t *threadpoolImpl) EXecwpr(f func(...interface{}) interface{}, p ...interface{}) {
+func (t *threadpoolImpl) EXecwpr(f func(...interface{}) interface{}, p ...interface{}) Furture {
 	t.addQueue(&Task{param: p, t: f})
 }
