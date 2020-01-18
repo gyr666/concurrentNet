@@ -18,6 +18,7 @@ type Allocator interface {
 	Develop
 	Alloc(uint64) ByteBuffer
 	release(ByteBuffer)
+	PoolSize() uint64
 }
 
 type ByteBuffer interface {
@@ -32,8 +33,8 @@ type ByteBuffer interface {
 type BaseByteBuffer struct {
 	a       Allocator
 	capital uint64
-	WP      uint
-	RP      uint
+	WP      uint64
+	RP      uint64
 	RWType  bool
 }
 

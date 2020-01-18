@@ -11,9 +11,8 @@ type IOer interface {
 }
 
 type Writer interface {
-	write([]byte) error
+	Write([]byte) error
 }
 type Reader interface {
-	readInt() (int, error)
-	readNByte(int) ([]byte, error)
+	Read(int) ([]byte, error)
 }
