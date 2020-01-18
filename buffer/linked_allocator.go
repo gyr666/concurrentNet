@@ -96,7 +96,7 @@ func (b *byteBufferImpl) Release() {
 func (b *byteBufferImpl) Write(_b []byte) error {
 	l := util.Int2Uint64(len(_b))
 	if l > b.capital-b.WP {
-		return errors.New("Index out of bound")
+		return errors.New(util.INDEX_OUTOF_BOUND)
 	}
 	util.BlockCopy(_b, 0, b.s, b.WP, l)
 	b.WP += l
@@ -105,7 +105,7 @@ func (b *byteBufferImpl) Write(_b []byte) error {
 
 func (b *byteBufferImpl) Read(i int) ([]byte, error) {
 	if util.Int2Uint64(i) > b.capital-b.RP {
-		return nil, errors.New("Index out of bound")
+		return nil, errors.New(util.INDEX_OUTOF_BOUND)
 	}
 	bt := make([]byte, i)
 	util.BlockCopy(b.s, b.RP, bt, 0, util.Int2Uint64(i))
