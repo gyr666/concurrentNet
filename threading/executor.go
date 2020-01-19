@@ -8,7 +8,7 @@ type PoolExecutor interface {
 	Executor
 	Execwr(func() interface{}) Future
 	Execwpr(func(...interface{}) interface{}, ...interface{}) Future
-	Execwp(func(...interface{}),...interface{})
+	Execwp(func(...interface{}), ...interface{})
 }
 type Booter interface {
 	Shutdown()
@@ -21,12 +21,9 @@ type Task struct {
 	t     ExecTask
 }
 
-func (t *Task) init() *Task{
-	t.rev = make(chan interface{},1)
+func (t *Task) init() *Task {
+	t.rev = make(chan interface{}, 1)
 	return t
 }
-type ExecTask func(...interface{}) interface{}
 
-type Future interface{
-	get() interface{}
-}
+type ExecTask func(...interface{}) interface{}
