@@ -1,5 +1,6 @@
 package threading
 
+// Executor, the instance can execute work at background
 type Executor interface {
 	// execute a task on `Executor`
 	Exec(func())
@@ -16,9 +17,13 @@ type PoolExecutor interface {
 	Execwp(func(...interface{}), ...interface{})
 }
 
+// Booter, Launch the Executor
 type Booter interface {
+	// boot 
 	Boot()
+	// shutdown, pool forbidden execute new works, but execute all of works in queue
 	Shutdown()
+	// showdown right away. pool forbidden execute new works, and all of works in queue
 	ShutdownNow()
 }
 
