@@ -5,21 +5,6 @@ import (
 	"time"
 )
 
-type PoolState uint8
-type ControlType uint8
-
-const (
-	STOP        PoolState = 1
-	RUNNING     PoolState = 1 << 1
-	WAITING     PoolState = 1 << 2
-	SHUTDOWNING PoolState = 1 << 3
-)
-
-const (
-	STOPANY  ControlType = 1
-	STOPALL  ControlType = 1 << 1
-	SHUTDOWN ControlType = 1 << 2
-)
 
 type FutureImpl struct {
 	wait *chan interface{}
@@ -59,37 +44,43 @@ func (t *threadPoolImpl) Init(core, ext int, span time.Duration, w uint64, strat
 	t.core = core
 	t.workQueue = make(chan *Task, 1000)
 	t.controlChannel = make(chan ControlType, t.core)
-	t.g.Add(t.core)
 	t.s = strategy
+	t.g.Add(t.core)
 }
 func (t *threadPoolImpl) Boot() {
 	t.status = RUNNING
 	for i := 0; i < t.core; i++ {
-		go func() {
-		Exit0:
-			for t.status == RUNNING {
-				select {
-				case task := <-t.workQueue:
-					task.rev <- task.t(task.param)
-				case op := <-t.controlChannel:
-					switch op {
-					case STOPALL:
-						t.controlChannel <- op
-						break Exit0
-					case SHUTDOWN:
-						t.controlChannel <- op
-						if len(t.workQueue) == 0 {
-							break Exit0
-						} else {
-							// todo
-						}
-					}
-				}
-			}
-			t.g.Add(-1)
-		}()
+		go t.LaunchWork()
 	}
 
+}
+
+func (t *threadPoolImpl) LaunchWork() {
+	for {
+		select {
+		case task := <-t.workQueue:
+			task.rev <- task.t(task.param)
+		case op := <-t.controlChannel:
+			switch op {
+			case STOPALL:
+				t.g.Done()
+				t.controlChannel <- op
+				return
+			case SHUTDOWN:
+				t.controlChannel <- op
+				if len(t.workQueue) == 0 {
+					break
+				} else {
+					// todo
+				}
+			}
+		}
+	}
+}
+
+func (t *threadPoolImpl) LaunchWorkExt() {
+	t.g.Add(1)
+	t.LaunchWork()
 }
 
 func (t *threadPoolImpl) Status() PoolState {
@@ -108,6 +99,10 @@ func (t *threadPoolImpl) Shutdown() {
 func (t *threadPoolImpl) ShutdownNow() {
 	t.status = SHUTDOWNING
 	t.controlChannel <- STOPALL
+	go func() {
+		t.g.Wait()
+		t.status = STOP
+	}()
 }
 
 func (t *threadPoolImpl) addQueue(task *Task) {
@@ -118,12 +113,14 @@ func (t *threadPoolImpl) addQueue(task *Task) {
 		panic("pool has been close")
 	}
 }
+
 func (t *threadPoolImpl) Exec(f func()) {
 	t.addQueue(&Task{param: nil, t: func(i ...interface{}) interface{} {
 		f()
 		return nil
 	}})
 }
+
 func (t *threadPoolImpl) Execwr(f func() interface{}) Future {
 	tsk := Task{param: nil, t: func(i ...interface{}) interface{} {
 		return f()
@@ -132,6 +129,7 @@ func (t *threadPoolImpl) Execwr(f func() interface{}) Future {
 	t.addQueue(&tsk)
 	return newFuture(&tsk.rev)
 }
+
 func (t *threadPoolImpl) Execwp(f func(...interface{}), p ...interface{}) {
 	t.addQueue(&Task{param: p, t: func(i ...interface{}) interface{} {
 		f(i...)
