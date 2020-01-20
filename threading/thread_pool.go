@@ -13,6 +13,10 @@ func (f *FutureImpl) get() interface{} {
 	return <-*f.wait
 }
 
+func (f *FutureImpl) isDone() bool {
+	return len(*f.wait) == 1
+}
+
 func newFuture(c *chan interface{}) Future {
 	return &FutureImpl{wait: c}
 }
