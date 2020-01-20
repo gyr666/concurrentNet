@@ -17,7 +17,7 @@ type PoolExecutor interface {
 	Execwp(func(...interface{}), ...interface{})
 }
 
-// Launcher, voot the Executor
+// Launcher, boot the Executor
 type Launcher interface {
 	// boot
 	Boot()
