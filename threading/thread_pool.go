@@ -16,6 +16,7 @@ func (f *FutureImpl) get() interface{} {
 func newFuture(c *chan interface{}) Future {
 	return &FutureImpl{wait: c}
 }
+
 func NewThreadPool(core, ext int, span time.Duration, w uint64, strategy func(interface{})) ThreadPool {
 	tp := threadPoolImpl{}
 	tp.Init(core, ext, span, w, strategy)
@@ -30,6 +31,7 @@ type ThreadPool interface {
 	Init(core, ext int, d time.Duration, w uint64, strategy func(interface{}))
 	WaitForStop()
 }
+
 type threadPoolImpl struct {
 	status         PoolState
 	s              func(interface{})
@@ -58,7 +60,7 @@ func (t *threadPoolImpl) LaunchWork() {
 	for {
 		select {
 		case task := <-t.workQueue:
-			task.rev <- task.t(task.param)
+			task.rev <- task.t(task.param...)
 		case op := <-t.controlChannel:
 			switch op {
 			case STOPALL:
