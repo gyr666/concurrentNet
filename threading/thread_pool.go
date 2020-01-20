@@ -5,7 +5,6 @@ import (
 	"time"
 )
 
-
 type FutureImpl struct {
 	wait *chan interface{}
 }
@@ -25,7 +24,7 @@ func NewThreadPool(core, ext int, span time.Duration, w uint64, strategy func(in
 }
 
 type ThreadPool interface {
-	Booter
+	Launcher
 	PoolExecutor
 	Status() PoolState
 	Init(core, ext int, d time.Duration, w uint64, strategy func(interface{}))
@@ -66,10 +65,13 @@ func (t *threadPoolImpl) LaunchWork() {
 				t.g.Done()
 				t.controlChannel <- op
 				return
+			case STOPANY:
+				t.g.Done()
 			case SHUTDOWN:
 				t.controlChannel <- op
 				if len(t.workQueue) == 0 {
-					break
+					t.g.Done()
+					return
 				} else {
 					// todo
 				}
@@ -92,16 +94,16 @@ func (t *threadPoolImpl) WaitForStop() {
 }
 
 func (t *threadPoolImpl) Shutdown() {
-	t.status = SHUTDOWNING
+	t.status = STOPPING
 	t.controlChannel <- SHUTDOWN
 }
 
 func (t *threadPoolImpl) ShutdownNow() {
-	t.status = SHUTDOWNING
+	t.status = STOPPING
 	t.controlChannel <- STOPALL
 	go func() {
 		t.g.Wait()
-		t.status = STOP
+		t.status = STOPPED
 	}()
 }
 
@@ -109,7 +111,7 @@ func (t *threadPoolImpl) addQueue(task *Task) {
 	switch t.status {
 	case RUNNING:
 		t.workQueue <- task
-	case SHUTDOWNING:
+	case STOPPING:
 		panic("pool has been close")
 	}
 }

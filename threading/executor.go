@@ -17,9 +17,9 @@ type PoolExecutor interface {
 	Execwp(func(...interface{}), ...interface{})
 }
 
-// Booter, Launch the Executor
-type Booter interface {
-	// boot 
+// Launcher, voot the Executor
+type Launcher interface {
+	// boot
 	Boot()
 	// shutdown, pool forbidden execute new works, but execute all of works in queue
 	Shutdown()
