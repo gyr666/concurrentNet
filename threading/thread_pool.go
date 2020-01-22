@@ -9,7 +9,7 @@ type FutureImpl struct {
 	wait *chan interface{}
 }
 
-func (f *FutureImpl) get() interface{} {
+func (f *FutureImpl) Get() interface{} {
 	return <-*f.wait
 }
 
