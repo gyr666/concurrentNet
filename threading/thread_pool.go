@@ -70,16 +70,16 @@ func (t *threadPoolImpl) LaunchWork() {
 			//control unit
 		case op := <-t.controlChannel:
 			switch op {
-			case STOPALL:
-				t.g.Done()
-				t.controlChannel <- op
-				return
 
 			case SHUTDOWN:
 				t.controlChannel <- op
 				if len(t.workQueue) != 0 {
 					t.consumeRemain()
 				}
+				fallthrough
+
+			case SHUTDOWNNOW:
+				t.controlChannel <- op
 				fallthrough
 
 			case STOPANY:
@@ -119,13 +119,20 @@ func (t *threadPoolImpl) WaitForStop() {
 }
 
 func (t *threadPoolImpl) Shutdown() {
-	t.status = STOPPING
-	t.controlChannel <- SHUTDOWN
+	t.waitStop(SHUTDOWN)
 }
 
 func (t *threadPoolImpl) ShutdownNow() {
+	t.waitStop(SHUTDOWNNOW)
+}
+
+func (t *threadPoolImpl) ShutdownAny() {
+	t.waitStop(SHUTDOWNNOW)
+}
+
+func (t *threadPoolImpl) waitStop(c ControlType) {
 	t.status = STOPPING
-	t.controlChannel <- STOPALL
+	t.controlChannel <- c
 	go func() {
 		t.g.Wait()
 		t.status = STOPPED
