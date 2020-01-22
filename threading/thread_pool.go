@@ -43,6 +43,7 @@ type threadPoolImpl struct {
 	workQueue      chan *Task
 	controlChannel chan ControlType
 	g              sync.WaitGroup
+	w              sync.Mutex
 }
 
 func (t *threadPoolImpl) Init(core, ext int, span time.Duration, w uint64, strategy func(interface{})) {
@@ -69,20 +70,36 @@ func (t *threadPoolImpl) LaunchWork() {
 			//control unit
 		case op := <-t.controlChannel:
 			switch op {
-			case STOPALL:
-				t.g.Done()
-				t.controlChannel <- op
-				return
-			case STOPANY:
-				t.g.Done()
+
 			case SHUTDOWN:
 				t.controlChannel <- op
-				if len(t.workQueue) == 0 {
-					t.g.Done()
-					return
-				} else {
-					// todo
+				if len(t.workQueue) != 0 {
+					t.consumeRemain()
 				}
+				fallthrough
+
+			case SHUTDOWNNOW:
+				t.controlChannel <- op
+				fallthrough
+
+			case STOPANY:
+				t.g.Done()
+				return
+			}
+		}
+	}
+}
+
+func (t *threadPoolImpl) consumeRemain() {
+	for len(t.workQueue) != 0 {
+		if len(t.workQueue) != 0 {
+			t.w.Lock()
+			if len(t.workQueue) != 0 {
+				task := <-t.workQueue
+				t.w.Unlock()
+				task.rev <- task.t(task.param...)
+			} else {
+				t.w.Unlock()
 			}
 		}
 	}
@@ -102,13 +119,20 @@ func (t *threadPoolImpl) WaitForStop() {
 }
 
 func (t *threadPoolImpl) Shutdown() {
-	t.status = STOPPING
-	t.controlChannel <- SHUTDOWN
+	t.waitStop(SHUTDOWN)
 }
 
 func (t *threadPoolImpl) ShutdownNow() {
+	t.waitStop(SHUTDOWNNOW)
+}
+
+func (t *threadPoolImpl) ShutdownAny() {
+	t.waitStop(SHUTDOWNNOW)
+}
+
+func (t *threadPoolImpl) waitStop(c ControlType) {
 	t.status = STOPPING
-	t.controlChannel <- STOPALL
+	t.controlChannel <- c
 	go func() {
 		t.g.Wait()
 		t.status = STOPPED
