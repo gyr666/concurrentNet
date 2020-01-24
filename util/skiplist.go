@@ -1,7 +1,6 @@
 package util
 
 import (
-	"fmt"
 	"math/rand"
 	"time"
 )
@@ -150,41 +149,3 @@ func (b *Skiplist) Delete(searchKey uint64) {
 
 }
 
-//DisplayAll: Display current SkipList content in console, will also print out the linked pointer.
-func (b *Skiplist) DisplayAll() {
-	fmt.Printf("\nhead->")
-	currentNode := b.Header
-
-	//Draw forward[0] base
-	for {
-		fmt.Printf("[key:%d][val:%v]->", currentNode.Key, currentNode.Val)
-		if currentNode.Forward[0] == nil {
-			break
-		}
-		currentNode = currentNode.Forward[0]
-	}
-	fmt.Printf("nil\n")
-
-	fmt.Println("---------------------------------------------------------")
-	currentNode = b.Header
-	//Draw all data node.
-	for {
-		fmt.Printf("[node:%d], val:%v, level:%d ", currentNode.Key, currentNode.Val, currentNode.Level)
-
-		if currentNode.Forward[0] == nil {
-			break
-		}
-
-		for j := currentNode.Level - 1; j >= 0; j-- {
-			fmt.Printf(" fw[%d]:", j)
-			if currentNode.Forward[j] != nil {
-				fmt.Printf("%d", currentNode.Forward[j].Key)
-			} else {
-				fmt.Printf("nil")
-			}
-		}
-		fmt.Printf("\n")
-		currentNode = currentNode.Forward[0]
-	}
-	fmt.Printf("\n")
-}
