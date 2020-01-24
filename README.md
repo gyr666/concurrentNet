@@ -21,6 +21,14 @@ unix.SIGNAL(2,func(signal int)){
 	server.stop()
 })
 fmt.Println("server listen at 0.0.0.0:7788,[::]:7788")
-sleep(-1)
+server.join()
 
 ```
+# PACKAGE INTURDUCE
+## buffer
+package `buffer` implement the `buffer alloctor` by `bitmap` and `skiplist`.
+## pipeline
+package `pipeline` implement pipe that when channel create, data I/O, exception, channel close.
+## threading
+package `threading` implement thread pool by stand threadpool and steal task threadpool
+
