@@ -129,7 +129,7 @@ func (t *threadPoolImpl) ShutdownNow() {
 }
 
 func (t *threadPoolImpl) ShutdownAny() {
-	t.waitStop(SHUTDOWNNOW)
+	t.controlChannel <- STOPANY
 }
 
 func (t *threadPoolImpl) waitStop(c ControlType) {
