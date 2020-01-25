@@ -92,15 +92,17 @@ func (t *threadPoolImpl) LaunchWork() {
 
 func (t *threadPoolImpl) consumeRemain() {
 	for len(t.workQueue) != 0 {
+		// The necessity og locing here is that
+		// we have to make sure operator get length
+		// and operator consume the channel is an
+		// atomic operation.
+		t.w.Lock()
 		if len(t.workQueue) != 0 {
-			t.w.Lock()
-			if len(t.workQueue) != 0 {
-				task := <-t.workQueue
-				t.w.Unlock()
-				task.rev <- task.t(task.param...)
-			} else {
-				t.w.Unlock()
-			}
+			task := <-t.workQueue
+			t.w.Unlock()
+			task.rev <- task.t(task.param...)
+		} else {
+			t.w.Unlock()
 		}
 	}
 }
@@ -127,7 +129,7 @@ func (t *threadPoolImpl) ShutdownNow() {
 }
 
 func (t *threadPoolImpl) ShutdownAny() {
-	t.waitStop(SHUTDOWNNOW)
+	t.controlChannel <- STOPANY
 }
 
 func (t *threadPoolImpl) waitStop(c ControlType) {
