@@ -1,10 +1,10 @@
-# concurrentNet
+# ConcurrentNet
 a network platform to support high concurrent
 
 # GET START
 ### A simple echo server
 ```go
-server := NewConcurrentNet()
+server  := NewConcurrentNet()
 exeCode := server.OnChannelConnection(func(c Channel,p Pipeline){
 	p.addLast(func(d Data) Data){
 		return d
@@ -22,8 +22,15 @@ unix.SIGNAL(2,func(signal int)){
 })
 fmt.Println("server listen at 0.0.0.0:7788,[::]:7788")
 server.join()
-
 ```
+
+### Then Test It
+```bash
+telnet [::]:1 7788
+telent> Hello
+telnet> Hello
+```
+
 # PACKAGE INTURDUCE
 ## buffer
 package `buffer` implement the `buffer alloctor` by `bitmap` and `skiplist`.
