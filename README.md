@@ -28,7 +28,7 @@ server.join()
 ```bash
 telnet [::]:1 7788
 telent> Hello
-tlenet> Hello
+telnet> Hello
 ```
 
 # PACKAGE INTURDUCE
