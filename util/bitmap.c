@@ -1,13 +1,23 @@
 #include "bitmap.h"
 void MakeItAs(ul* data,ul p,char v){
 	if (v){
-		SETBIT(&data[p/(sizeof(ul)<<8)],p%(sizeof(ul)<<8));
+		SETBIT(&data[p/(sizeof(ul)<<X8)],p%(sizeof(ul)<<X8));
 	}else{
-		CLRBIT(&data[p/(sizeof(ul)<<8)],p%(sizeof(ul)<<8));
+		CLRBIT(&data[p/(sizeof(ul)<<X8)],p%(sizeof(ul)<<X8));
+	}
+}
+void MakeItAsArea(ul* data,ul start,ul end,char v){
+	for (ul i = start;i < end ;i++){
+		MakeItAs(data,i,v);
+	}
+}
+void MakeItAsAreal(ul* data,ul start,ul end,char* v){
+	for (ul i = start;i < end ;i++){
+		MakeItAs(data,i,v[i]);
 	}
 }
 char AcquirePosition(ul* data,ul p){
-	return BITVAL(data[p/(sizeof(ul)<<8)],p);
+	return BITVAL(data[p/(sizeof(ul)<<X8)],p)?1:0;
 }
 struct BitMap * BitMapInit(ul size){
 	struct BitMap *map = NULL;
@@ -17,7 +27,6 @@ struct BitMap * BitMapInit(ul size){
 	}
 	map->count = count;
 	map->length = size;
-	map->MakeItAs = MakeItAs;
 	memset(map->data,0,count*sizeof(ul));
 	return map;
 }
