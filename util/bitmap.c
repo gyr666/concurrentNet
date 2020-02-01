@@ -19,6 +19,12 @@ void MakeItAsAreal(ul* data,ul start,ul end,char* v){
 char AcquirePosition(ul* data,ul p){
 	return BITVAL(data[p/(sizeof(ul)<<X8)],p)?1:0;
 }
+ul Size(ul *data){
+	return *(data-sizeof(ul));
+}
+ul Length(ul *data){
+	return *(data-2*sizeof(ul));
+}
 struct BitMap * BitMapInit(ul size){
 	struct BitMap *map = NULL;
 	ul count = size%sizeof(ul)==0?size/(sizeof(ul)<<X8):size/(sizeof(ul)<<X8)+1;

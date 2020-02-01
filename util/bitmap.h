@@ -1,6 +1,5 @@
 // NOTHING
 // no border check
-#include <stdio.h>
 #define ULONG
 #define X2 1
 #define X4 2
@@ -26,3 +25,5 @@ void MakeItAs(ul* data,ul p,char v);
 char AcquirePosition(ul* data,ul p);
 void MakeItAsArea(ul* data,ul start,ul end,char v);
 void MakeItAsAreal(ul* data,ul start,ul end,char* v);
+ul Size(ul *data);
+ul Length(ul *data);
