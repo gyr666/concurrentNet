@@ -2,17 +2,18 @@ package test
 
 import (
 	"fmt"
-	"gunplan.top/concurrentNet/buffer"
 	"testing"
+
+	"gunplan.top/concurrentNet/buffer"
 )
 
 // TestA  Test 必须写，后边的名称随便写
 func TestStandAllocator(t *testing.T) {
 	v := buffer.NewSandBufferAllocator()
-	g :=v.Alloc(40)
+	g := v.Alloc(40)
 	g.Size()
-	for i:=0;i<40;i++{
-		Equal(v.Alloc(17).Size(),32,"Size Test")
+	for i := 0; i < 40; i++ {
+		Equal(v.Alloc(17).Size(), 32, "Size Test")
 	}
 	b := v.Alloc(32)
 	t.Logf("Size:%d", b.Size())
@@ -32,8 +33,8 @@ func TestStandAllocator(t *testing.T) {
 		fmt.Println(string(bs))
 	}
 	b.Release()
-	fmt.Printf("operator time : %d\n",v.OperatorTimes())
-	fmt.Printf("operator size : %d\n",v.AllocSize())
+	fmt.Printf("operator time : %d\n", v.OperatorTimes())
+	fmt.Printf("operator size : %d\n", v.AllocSize())
 
 	t.Logf("Size:%d", v.PoolSize())
 }

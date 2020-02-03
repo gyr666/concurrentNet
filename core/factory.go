@@ -2,15 +2,13 @@ package core
 
 var Factory = ChannelFactory{}
 
-func NewConcurrentNet() Server{
+func NewConcurrentNet() Server {
 	s := ServerImpl{}
 	return s.Init()
 }
 
 type ChannelFactory struct {
-
 }
-
 
 func (c *ChannelFactory) NewChildChannelInstance() ChildChannel {
 	return &childChannelImpl{}

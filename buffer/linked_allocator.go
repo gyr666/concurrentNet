@@ -1,8 +1,9 @@
 package buffer
 
 import (
-	"gunplan.top/concurrentNet/util"
 	"sync"
+
+	"gunplan.top/concurrentNet/util"
 )
 
 func NewLikedBufferAllocator() Allocator {
@@ -47,7 +48,7 @@ func (a *allocatorImpl) Alloc(length uint64) ByteBuffer {
 	bf := new(byteBufferImpl)
 	bf.Init(length, a)
 	return bf
-}	
+}
 
 func (a *allocatorImpl) findByUnusedList(i uint64) ByteBuffer {
 	k, v := a.unUsed.Search(i)
