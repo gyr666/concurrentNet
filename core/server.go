@@ -6,5 +6,7 @@ type Server interface{
 	Option(OptionType,interface{}) Server
 	AddLestion(NetworkInet64) Server
 	Wtype(WaitType) Server
+	Stop()
+	Sync() uint8
 	Join()
 }
