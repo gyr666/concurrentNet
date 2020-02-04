@@ -1,5 +1,4 @@
 #include "bitmap.h"
-#include "stdio.h"
 void MakeItAs(ul* data,ul p,char v){
 	if (v){
 		SETBIT(&data[p/(sizeof(ul)<<X8)],p%(sizeof(ul)<<X8));
