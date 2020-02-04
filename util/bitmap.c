@@ -1,4 +1,5 @@
 #include "bitmap.h"
+#include "stdio.h"
 void MakeItAs(ul* data,ul p,char v){
 	if (v){
 		SETBIT(&data[p/(sizeof(ul)<<X8)],p%(sizeof(ul)<<X8));
@@ -18,6 +19,12 @@ void MakeItAsAreal(ul* data,ul start,ul end,char* v){
 }
 char AcquirePosition(ul* data,ul p){
 	return BITVAL(data[p/(sizeof(ul)<<X8)],p)?1:0;
+}
+ul Size(void *data){
+	return *((ul *)(data-sizeof(ul)));
+}
+ul Length(void *data){
+	return *((ul *)(data-(sizeof(ul)<<X2)));
 }
 struct BitMap * BitMapInit(ul size){
 	struct BitMap *map = NULL;
