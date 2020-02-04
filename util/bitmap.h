@@ -25,5 +25,5 @@ void MakeItAs(ul* data,ul p,char v);
 char AcquirePosition(ul* data,ul p);
 void MakeItAsArea(ul* data,ul start,ul end,char v);
 void MakeItAsAreal(ul* data,ul start,ul end,char* v);
-ul Size(ul *data);
-ul Length(ul *data);
+ul Size(void *data);
+ul Length(void *data);
