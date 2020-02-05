@@ -7,15 +7,6 @@ const(
 	ASYNC WaitType = 1<<1
 )
 
-type OptionType uint8
-
-const(
-	BackLog		OptionType = 1
-	BufferLength	OptionType = 1<<1
-	NetWorkType	OptionType = 1<<2
-	StreamType	OptionType = 1<<3
-)
-
 type ConnectStatus uint8
 
 const(

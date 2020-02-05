@@ -1,23 +1,25 @@
 package main
 
 import (
+	"golang.org/x/sys/unix"
 	"fmt"
 	"gunplan.top/concurrentNet/core"
 )
 
 func main() {
+	sig :=make(chan os.Signal
 	server  := core.NewConcurrentNet()
 	server.OnChannelConnect(func(c core.Channel,p core.Pipeline){
-		p.addLast(func(d core.Data) core.Data{
+		p.AddLast(func(d core.Data) core.Data{
 			return d
 		})
 	}).
 	SetServerScoketChannel(ChannelFactory.Instance.KqueueSocketChannel).
-	Option(Option.BackLog,1024).
-	Option(Option.BufferLength,2020).
-	Option(Option.NetWorkType,NetWorkType.TCP).
-	AddListen(&NetworkInet64{Port:7788}).
-	Wtype(Wtype.ASYNC).
+	Option(&core.BackLog{},1024).
+	Option(&core.BufferLength{},2020).
+	Option(&core.NetWorkType{},NetWorkType.TCP).
+	AddListen(&core.NetworkInet64{Port:7788}).
+	Wtype(core.ASYNC).
 	Sync()
 	unix.Signal(2,func(signal int){
 		server.Stop()
