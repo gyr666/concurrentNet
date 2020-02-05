@@ -18,11 +18,19 @@ const(
 	WARN2  ConnectStatus = 1<<5
 )
 
+type NetworkType uint8
+
+const(
+	TCP	NetworkType = 1
+	UDP	NetworkType = 1<<1
+	RAW	NetworkType = 1<<2
+)
+
 type ChannelType uint8
 
 const(
-	ChildChannel	ChannelType = 1
-	ParentChannel	ChannelType = 1<<1
+	ChildChannel_	ChannelType = 1
+	ParentChannel_	ChannelType = 1<<1
 )
 
 type NetworkInet64 struct{
