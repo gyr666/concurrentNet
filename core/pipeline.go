@@ -2,6 +2,6 @@
 package core
 
 type Pipeline interface{
-	addLast(func(Data) Data)
-	addFirst(func(Data) Data)
+	AddLast(func(Data) Data)
+	AddFirst(func(Data) Data)
 }
