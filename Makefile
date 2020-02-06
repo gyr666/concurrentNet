@@ -1,10 +1,11 @@
-BULID=go build
+BUILD=go build
+FILE=main.go
 Default:
-	go build main.go
+	$(BUILD) $(FILE)
 Free:
-	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 $(BUILD) main.go
+	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 $(BUILD) $(FILE)
 Lin:
-	GOOS=linux GOARCH=amd64 $(BUILD) main.go
+	GOOS=linux GOARCH=amd64 $(BUILD) $(FILE)
 Run:
 	./main
 Clean:

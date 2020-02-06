@@ -4,7 +4,6 @@ import (
 	"os"
 	"syscall"
 	"os/signal"
-	"fmt"
 	"gunplan.top/concurrentNet/core"
 )
 
@@ -31,6 +30,5 @@ func main() {
 		server.Stop()
 	}()
 	server.Sync()
-	fmt.Println("server listen at 0.0.0.0:7788,[::]:7788")
 	server.Join()
 }

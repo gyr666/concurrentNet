@@ -1,13 +1,15 @@
 package core
 
-import "fmt"
+
+type ChannelInCallback func(c Channel,p Pipeline)
 
 type Server interface{
-	OnChannelConnect(func(c Channel,p Pipeline)) Server
+	OnChannelConnect(ChannelInCallback) Server
 	SetServerScoketChannel(ServerInstance) Server
 	Option(OptionType,interface{}) Server
 	AddListen(*NetworkInet64) Server
 	Wtype(WaitType) Server
+	RegObserve(ServerObserve) Server
 	Stop()
 	Sync() uint8
 	Join()
@@ -16,35 +18,67 @@ type Server interface{
 
 type ServerImpl struct{
 	u chan uint8
+	c ChannelInCallback
+	i ServerInstance
+	t WaitType
+	n []NetworkInet64
+	o ServerObserve
+	s bool
 }
+
 func (s*ServerImpl) Init() Server{
 	s.u = make(chan uint8,1)
+	s.n = make([]NetworkInet64,1)
+	s.o = &DefaultObserve{}
 	return s
 }
-func (s*ServerImpl) OnChannelConnect(func(c Channel,p Pipeline)) Server{
+
+func (s*ServerImpl) RegObserve(o ServerObserve) Server{
+	s.o = o
 	return s
 }
-func (s*ServerImpl) SetServerScoketChannel(ServerInstance) Server{
+func (s*ServerImpl) OnChannelConnect(c ChannelInCallback) Server{
+	s.c = c
 	return s
 }
-func (s*ServerImpl) Option(OptionType,interface{}) Server{
+
+func (s*ServerImpl) SetServerScoketChannel(i ServerInstance) Server{
+	s.i = i
 	return s
 }
-func (s*ServerImpl) AddListen(*NetworkInet64) Server{
+
+func (s*ServerImpl) Option(o OptionType,i interface{}) Server{
+	o.doSet(i)
 	return s
 }
-func (s*ServerImpl) Wtype(WaitType) Server{
+
+func (s*ServerImpl) AddListen(n *NetworkInet64) Server{
+	s.n = append(s.n,*n)
 	return s
 }
+
+func (s*ServerImpl) Wtype(w WaitType) Server{
+	s.t = w
+	return s
+}
+
 func (s*ServerImpl) Stop(){
+	s.o.OnStoping()
 	s.u <- 1
-	fmt.Print("System Stoping\n");
+	s.o.OnStoped()
 }
-func (s*ServerImpl) Join(){
-}
-func (s*ServerImpl) Sync() uint8 {
-	//todo use callback
-	fmt.Print("System Booting\n");
+
+func (s*ServerImpl) Join() {
 	<-s.u
+}
+
+func (s*ServerImpl) Sync() uint8 {
+	s.o.OnBooting()
+	//todo use callback
+	if s.s {
+		s.o.OnBooted()
+		s.Join()
+	}
+	s.o.OnBooted()
 	return 0
 }
