@@ -76,9 +76,9 @@ func (s*ServerImpl) Sync() uint8 {
 	s.o.OnBooting()
 	//todo use callback
 	if s.s {
-		s.o.OnBooted()
+		s.o.OnBooted(s.n)
 		s.Join()
 	}
-	s.o.OnBooted()
+	s.o.OnBooted(s.n)
 	return 0
 }

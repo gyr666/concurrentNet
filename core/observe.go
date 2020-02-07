@@ -2,7 +2,7 @@ package core
 import "fmt"
 type ServerObserve interface{
 	OnBooting()
-	OnBooted()
+	OnBooted(l []NetworkInet64)
 	OnStoping()
 	OnStoped()
 }
@@ -10,18 +10,16 @@ type ServerObserve interface{
 type DefaultObserve struct{
 
 }
-func	(d *DefaultObserve)OnBooting(){
+func (d *DefaultObserve)OnBooting(){
 	fmt.Println("On Booting")
 }
-func	(d *DefaultObserve)OnBooted(){
-	fmt.Println("On Booted")
+func (d *DefaultObserve)OnBooted(l []NetworkInet64){
+	fmt.Printf("On Booted %#v",l)
 }
-func	(d *DefaultObserve)OnStoping(){
-
+func (d *DefaultObserve)OnStoping(){
 	fmt.Println("On Stoping")
-
 }
-func	(d *DefaultObserve)OnStoped(){
+func (d *DefaultObserve)OnStoped(){
 	fmt.Println("On Stoped")
 
 }
