@@ -4,24 +4,29 @@ a network platform to support high concurrent
 # GET START
 ### A simple echo server
 ```go
-server  := NewConcurrentNet()
-exeCode := server.OnChannelConnect(func(c Channel,p Pipeline){
-	p.addLast(func(d Data) Data){
-		return d
-	})
-}).
-	SetServerScoketChannel(ChannelFactory.Instance.KqueueSocketChannel).
-	Option(Option.BackLog,1024).
-	Option(Option.BufferLength,2020).
-	Option(Option.NetWorkType,NetWorkType.TCP).
-	AddListen(&NetworkInet64{Port:7788}).
-	Wtype(Wtype.ASYNC).
-	Sync()
-unix.SIGNAL(2,func(signal int)){
-	server.Stop()
-})
-fmt.Println("server listen at 0.0.0.0:7788,[::]:7788")
-server.Join()
+        server  := core.NewConcurrentNet()
+        server.OnChannelConnect(func(c core.Channel,p core.Pipeline){
+                p.AddLast(func(d core.Data) core.Data{
+                        return d
+                })
+        }).
+        SetServerScoketChannel(core.Factory.NewParentChannelInstance()).
+        Option(&core.BackLog{},1024).
+        Option(&core.BufferLength{},2020).
+        Option(&core.NetWorkType{},core.TCP).
+        AddListen(&core.NetworkInet64{Port:7788}).
+        Wtype(core.ASYNC)
+        sc := make(chan os.Signal, 1)
+        signal.Notify(sc,
+                syscall.SIGINT,
+                syscall.SIGTERM,
+                syscall.SIGQUIT)
+        go func(){
+                <-sc
+                server.Stop()
+        }()
+        server.Sync()
+        server.Join()
 ```
 
 ### Then Test It
