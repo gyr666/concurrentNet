@@ -12,13 +12,20 @@ type Channel interface{
 }
 
 type ChannelImpl struct{
+	id	uint64
+	p	Channel
+	address	NetworkInet64
+	status	ConnectStatus
+	t	ChannelType
+	fd	int
+}
 
-}
 func (c *ChannelImpl) Address() NetworkInet64{
-	return NetworkInet64{Address:"[::]:0"}
+	return c.address
 }
+
 func (c *ChannelImpl) Status() ConnectStatus{
-	return NORMAL
+	return c.status
 }
 func (c *ChannelImpl) Write(Data){
 
@@ -29,14 +36,14 @@ func (c *ChannelImpl) Read() Data{
 func (c *ChannelImpl) Close() error{
 	return nil
 }
-func (c *ChannelImpl)Reset() error{
+func (c *ChannelImpl) Reset() error{
 	return nil
 }
-func (c *ChannelImpl)Type() ChannelType{
-	return ChildChannel_
+func (c *ChannelImpl) Type() ChannelType{
+	return c.t
 }
-func (c *ChannelImpl)parent() Channel{
-	return nil
+func (c *ChannelImpl) parent() Channel{
+	return c.p
 }
 
 type ParentChannel struct{
