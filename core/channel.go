@@ -7,6 +7,7 @@ type Channel interface{
 	Read() Data
 	Close() error
 	Reset() error
+	AddTigger(TimeTigger)
 	Type()  ChannelType
 	parent() Channel
 }
@@ -31,6 +32,9 @@ type channelImpl struct{
 
 func (c *channelImpl) Address() NetworkInet64{
 	return c.address
+}
+
+func (c *channelImpl) AddTigger(t TimeTigger) {
 }
 
 func (c *channelImpl) Status() ConnectStatus{
