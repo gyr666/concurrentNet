@@ -63,3 +63,16 @@ func (b *BaseByteBuffer) Write(_b []byte) error {
 	return util.StandWrite(b.s,b.capital,&b.WP,_b)
 }
 
+func (a *BaseByteBuffer) Init(s uint64) error {
+	a.capital = s
+	a.s = make([]byte, a.capital)
+	return nil
+}
+
+func (a *BaseByteBuffer) Destroy() error {
+	a.RP = 0
+	a.WP = 0
+	a.s = nil
+	//help gc
+	return nil
+}

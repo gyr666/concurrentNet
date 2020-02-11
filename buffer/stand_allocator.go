@@ -20,14 +20,6 @@ type sByteBuffer struct {
 	index	uint8
 }
 
-func (c *sByteBuffer) Init() error{
-	return nil
-}
-
-func (c *sByteBuffer) Destroy() error{
-	return nil
-}
-
 
 func (c *sByteBuffer) Release() {
 
@@ -53,7 +45,7 @@ func (s *standAllocator) Init() error{
 		s.backAlloc(util.Int2UInt8(i))
 	}
 	s.min = 2;
-	s.max = 2 << p.size-1;
+	s.max = 2 << s.psize-1;
 	return nil
 }
 
@@ -109,8 +101,8 @@ func (s *standAllocator) backAlloc(index uint8) ByteBuffer {
 	for i,_ := range result {
 		result[i].next = &result[i+1]
 	}
-	s.divs[index].first = result
-	s.divs[index].last  = result + s.load
+	s.divs[index].first = &result[0]
+	s.divs[index].last  = &result[s.load]
 }
 
 

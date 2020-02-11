@@ -5,9 +5,9 @@ import (
 	"sync"
 )
 
-func NewBufferAllocator() Allocator {
+func NewLikedBufferAllocator() Allocator {
 	a := allocatorImpl{}
-	if err := a.Init(); err == nil {
+	if err := a.Init(0); err == nil {
 		return &a
 	}
 	return nil
@@ -19,7 +19,7 @@ type allocatorImpl struct {
 	l       sync.Mutex
 }
 
-func (a *allocatorImpl) Init() error {
+func (a *allocatorImpl) Init(s uint64) error {
 	a.unUsed = util.NewSkipList()
 	a.counter = util.NewCounter()
 	a.counter.Boot()
@@ -44,8 +44,8 @@ func (a *allocatorImpl) Alloc(length uint64) ByteBuffer {
 	if bf := a.findByUnusedList(length); bf != nil {
 		return bf
 	} else {
-		bf := byteBufferImpl{BaseByteBuffer: BaseByteBuffer{capital: length}, a: a}
-		bf.Init()
+		bf := byteBufferImpl{BaseByteBuffer: BaseByteBuffer{a:a}}
+		bf.Init(length)
 		return &bf
 	}
 }	
@@ -75,17 +75,6 @@ type byteBufferImpl struct {
 	a    Allocator
 	s    []byte
 	mode OperatorMode
-}
-
-func (a *byteBufferImpl) Init() error {
-	a.s = make([]byte, a.capital)
-	return nil
-}
-
-func (a *byteBufferImpl) Destroy() error {
-	a.RP = 0
-	a.WP = 0
-	return nil
 }
 
 func (b *byteBufferImpl) Release() {
