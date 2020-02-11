@@ -11,7 +11,16 @@ type Channel interface{
 	parent() Channel
 }
 
-type ChannelImpl struct{
+type ParentChannel interface {
+	Channel
+	Listen(*NetworkInet64)
+	loop()
+}
+
+type ChildChannel interface {
+	Channel
+}
+type channelImpl struct{
 	id	uint64
 	p	Channel
 	address	NetworkInet64
@@ -20,36 +29,41 @@ type ChannelImpl struct{
 	fd	int
 }
 
-func (c *ChannelImpl) Address() NetworkInet64{
+func (c *channelImpl) Address() NetworkInet64{
 	return c.address
 }
 
-func (c *ChannelImpl) Status() ConnectStatus{
+func (c *channelImpl) Status() ConnectStatus{
 	return c.status
 }
-func (c *ChannelImpl) Write(Data){
+func (c *channelImpl) Write(Data){
 
 }
-func (c *ChannelImpl) Read() Data{
+func (c *channelImpl) Read() Data{
 	return &dataImpl{}
 }
-func (c *ChannelImpl) Close() error{
+func (c *channelImpl) Close() error{
 	return nil
 }
-func (c *ChannelImpl) Reset() error{
+func (c *channelImpl) Reset() error{
 	return nil
 }
-func (c *ChannelImpl) Type() ChannelType{
+func (c *channelImpl) Type() ChannelType{
 	return c.t
 }
-func (c *ChannelImpl) parent() Channel{
+func (c *channelImpl) parent() Channel{
 	return c.p
 }
 
-type ParentChannel struct{
-	ChannelImpl
+
+type parentChannelImpl struct{
+	channelImpl
 }
 
-type ChildChannel struct{
-	ChannelImpl
+type childChannelImpl struct{
+	channelImpl
+}
+func (p *parentChannelImpl)Listen(*NetworkInet64){
+}
+func (p *parentChannelImpl)loop(){
 }
