@@ -1,7 +1,7 @@
 package buffer
 
 type Develop interface {
-	Init() error
+	Init(s uint64) error
 	Destroy() error
 }
 

@@ -1,5 +1,9 @@
 package buffer
 
+import (
+	"gunplan.top/concurrentNet/util"
+)
+
 type OperatorMode int
 
 const (
@@ -36,6 +40,7 @@ type BaseByteBuffer struct {
 	WP      uint64
 	RP      uint64
 	RWType  bool
+	s 		[]byte
 }
 
 func (b *BaseByteBuffer) convert() {
@@ -48,4 +53,26 @@ func (b *BaseByteBuffer) Mode() OperatorMode {
 
 func (b *BaseByteBuffer) Size() uint64 {
 	return b.capital
+}
+
+func (b *BaseByteBuffer) Read(i int) ([]byte, error) {
+	return util.StandRead(i,b.s,b.capital,&b.RP)
+}
+
+func (b *BaseByteBuffer) Write(_b []byte) error {
+	return util.StandWrite(b.s,b.capital,&b.WP,_b)
+}
+
+func (a *BaseByteBuffer) Init(s uint64) error {
+	a.capital = s
+	a.s = make([]byte, a.capital)
+	return nil
+}
+
+func (a *BaseByteBuffer) Destroy() error {
+	a.RP = 0
+	a.WP = 0
+	a.s = nil
+	//help gc
+	return nil
 }

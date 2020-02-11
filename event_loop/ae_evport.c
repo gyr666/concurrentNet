@@ -1,33 +1,3 @@
-/* ae.c module for illumos event ports.
- *
- * Copyright (c) 2012, Joyent, Inc. All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- *   * Redistributions of source code must retain the above copyright notice,
- *     this list of conditions and the following disclaimer.
- *   * Redistributions in binary form must reproduce the above copyright
- *     notice, this list of conditions and the following disclaimer in the
- *     documentation and/or other materials provided with the distribution.
- *   * Neither the name of Redis nor the names of its contributors may be used
- *     to endorse or promote products derived from this software without
- *     specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
- */
-
-
 #include <assert.h>
 #include <errno.h>
 #include <port.h>
@@ -40,29 +10,6 @@
 
 static int evport_debug = 0;
 
-/*
- * This file implements the ae API using event ports, present on Solaris-based
- * systems since Solaris 10.  Using the event port interface, we associate file
- * descriptors with the port.  Each association also includes the set of poll(2)
- * events that the consumer is interested in (e.g., POLLIN and POLLOUT).
- *
- * There's one tricky piece to this implementation: when we return events via
- * aeApiPoll, the corresponding file descriptors become dissociated from the
- * port.  This is necessary because poll events are level-triggered, so if the
- * fd didn't become dissociated, it would immediately fire another event since
- * the underlying state hasn't changed yet.  We must re-associate the file
- * descriptor, but only after we know that our caller has actually read from it.
- * The ae API does not tell us exactly when that happens, but we do know that
- * it must happen by the time aeApiPoll is called again.  Our solution is to
- * keep track of the last fds returned by aeApiPoll and re-associate them next
- * time aeApiPoll is invoked.
- *
- * To summarize, in this module, each fd association is EITHER (a) represented
- * only via the in-kernel association OR (b) represented by pending_fds and
- * pending_masks.  (b) is only true for the last fds we returned from aeApiPoll,
- * and only until we enter aeApiPoll again (at which point we restore the
- * in-kernel association).
- */
 #define MAX_EVENT_BATCHSZ 512
 
 typedef struct aeApiState {
