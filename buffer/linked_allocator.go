@@ -1,7 +1,6 @@
 package buffer
 
 import (
-	"errors"
 	"gunplan.top/concurrentNet/util"
 	"sync"
 )
@@ -49,7 +48,7 @@ func (a *allocatorImpl) Alloc(length uint64) ByteBuffer {
 		bf.Init()
 		return &bf
 	}
-}
+}	
 
 func (a *allocatorImpl) findByUnusedList(i uint64) ByteBuffer {
 	k, v := a.unUsed.Search(i)
@@ -93,21 +92,4 @@ func (b *byteBufferImpl) Release() {
 	b.a.release(b)
 }
 
-func (b *byteBufferImpl) Write(_b []byte) error {
-	l := util.Int2Uint64(len(_b))
-	if l > b.capital-b.WP {
-		return errors.New(util.INDEX_OUTOF_BOUND)
-	}
-	util.BlockCopy(_b, 0, b.s, b.WP, l)
-	b.WP += l
-	return nil
-}
 
-func (b *byteBufferImpl) Read(i int) ([]byte, error) {
-	if util.Int2Uint64(i) > b.capital-b.RP {
-		return nil, errors.New(util.INDEX_OUTOF_BOUND)
-	}
-	bt := make([]byte, i)
-	util.BlockCopy(b.s, b.RP, bt, 0, util.Int2Uint64(i))
-	return bt, nil
-}
