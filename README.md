@@ -2,6 +2,8 @@
 a network platform to support high concurrent
 
 # GET START
+### Test
+./config && make && sudo make install
 ### A simple echo server
 ```go
         server  := core.NewConcurrentNet()
