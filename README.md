@@ -1,9 +1,9 @@
 # ConcurrentNet
-a network platform to support high concurrent
-
+a network platform to support high concurrent  
+author: @gyr666 @H00001(frank)
 # GET START
 ### Test
-./config && make && sudo make install
+`./config && make && sudo make install`
 ### A simple echo server
 ```go
         server  := core.NewConcurrentNet()
