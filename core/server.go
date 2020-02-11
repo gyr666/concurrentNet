@@ -5,7 +5,7 @@ type ChannelInCallback func(c Channel,p Pipeline)
 
 type Server interface{
 	OnChannelConnect(ChannelInCallback) Server
-	SetServerScoketChannel(ServerInstance) Server
+	SetServerScoketChannel(ParentChannel) Server
 	Option(OptionType,interface{}) Server
 	AddListen(*NetworkInet64) Server
 	Wtype(WaitType) Server
@@ -19,7 +19,7 @@ type Server interface{
 type ServerImpl struct{
 	u chan uint8
 	c ChannelInCallback
-	i ServerInstance
+	i ParentChannel
 	t WaitType
 	n []NetworkInet64
 	o ServerObserve
@@ -37,12 +37,13 @@ func (s*ServerImpl) RegObserve(o ServerObserve) Server{
 	s.o = o
 	return s
 }
+
 func (s*ServerImpl) OnChannelConnect(c ChannelInCallback) Server{
 	s.c = c
 	return s
 }
 
-func (s*ServerImpl) SetServerScoketChannel(i ServerInstance) Server{
+func (s*ServerImpl) SetServerScoketChannel(i ParentChannel) Server{
 	s.i = i
 	return s
 }
@@ -53,7 +54,10 @@ func (s*ServerImpl) Option(o OptionType,i interface{}) Server{
 }
 
 func (s*ServerImpl) AddListen(n *NetworkInet64) Server{
-	s.n = append(s.n,*n)
+	if s.i == nil {
+		panic("please set parent channel")
+	}
+	s.i.Listen(n)
 	return s
 }
 

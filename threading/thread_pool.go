@@ -76,7 +76,6 @@ func (t *threadPoolImpl) LaunchWork() {
 				if len(t.workQueue) != 0 {
 					t.consumeRemain()
 				}
-				close(t.workQueue)
 				fallthrough
 
 			case SHUTDOWNNOW:
@@ -126,6 +125,7 @@ func (t *threadPoolImpl) Shutdown() {
 }
 
 func (t *threadPoolImpl) ShutdownNow() {
+	close(t.workQueue)
 	t.waitStop(SHUTDOWNNOW)
 }
 
@@ -147,9 +147,7 @@ func (t *threadPoolImpl) addQueue(task *Task) {
 	case RUNNING:
 		t.workQueue <- task
 	case STOPPING:
-		fallthrough
-	case STOPPED:
-		panic("pool has been close or closing")
+		panic("pool has been close")
 	}
 }
 

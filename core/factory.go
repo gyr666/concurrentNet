@@ -13,8 +13,8 @@ type ChannelFactory struct {
 
 
 func (c *ChannelFactory) NewChildChannelInstance() ChildChannel {
-	return ChildChannel{}
+	return &childChannelImpl{}
 }
 func (c *ChannelFactory) NewParentChannelInstance() ParentChannel {
-	return ParentChannel{}
+	return &parentChannelImpl{}
 }
