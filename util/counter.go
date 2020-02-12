@@ -10,6 +10,7 @@ type DynamicCounter interface {
 	Max() uint64
 	Min() uint64
 	Ave() uint64
+	Use() uint64
 	Size() uint64
 	Mid() uint64
 	Sum() uint64
@@ -25,6 +26,7 @@ type counterImpl struct {
 	ave0    uint64
 	sum0    uint64
 	max0    uint64
+	use     uint64
 	min0    uint64
 	channel chan uint64
 }
@@ -34,6 +36,7 @@ func (c *counterImpl) init() {
 	c.min0 = math.MaxInt64
 	c.max0 = 0
 }
+
 func (c *counterImpl) Push(u uint64) {
 	c.size++
 	c.channel <- u
@@ -51,6 +54,9 @@ func (c *counterImpl) Min() uint64 {
 func (c *counterImpl) Ave() uint64 {
 	return c.ave0
 }
+func (c *counterImpl) Use() uint64 {
+	return c.use
+}
 func (c *counterImpl) Mid() uint64 {
 	return c.ave0
 }
@@ -64,7 +70,12 @@ func (c *counterImpl) Boot() {
 		for {
 			select {
 			case data := <-c.channel:
-				c.sum0 += data
+				if data < 0 {
+					c.sum0 -= data
+				} else {
+					c.sum0 += data
+				}
+				c.use += data
 				c.ave0 = c.sum0 / c.size
 				if c.max0 < data {
 					c.max0 = data

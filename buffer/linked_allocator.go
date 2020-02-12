@@ -43,11 +43,10 @@ func (a *allocatorImpl) Alloc(length uint64) ByteBuffer {
 	defer a.l.Unlock()
 	if bf := a.findByUnusedList(length); bf != nil {
 		return bf
-	} else {
-		bf := new(byteBufferImpl)
-		bf.Init(length,a)
-		return bf
 	}
+	bf := new(byteBufferImpl)
+	bf.Init(length,a)
+	return bf
 }	
 
 func (a *allocatorImpl) findByUnusedList(i uint64) ByteBuffer {
@@ -61,6 +60,7 @@ func (a *allocatorImpl) findByUnusedList(i uint64) ByteBuffer {
 
 func (a *allocatorImpl) release(buffer ByteBuffer) {
 	a.l.Lock()
+	a.counter.Push(-buffer.Size())
 	a.unUsed.Insert(buffer.Size(), buffer)
 	a.l.Unlock()
 	go a.dynamicShrink()
@@ -75,9 +75,9 @@ type byteBufferImpl struct {
 }
 
 func (s *allocatorImpl) OperatorTimes() uint64 {
-	return 0
+	return s.counter.Size()
 }
 
 func (s *allocatorImpl) AllocSize() uint64 {
-	return 0
+	return s.counter.Use()
 }
