@@ -21,19 +21,13 @@ type sByteBuffer struct {
 }
 
 
-func (c *sByteBuffer) Release() {
-	c.a.release(c)
-}
-
-
-
 type standAllocator struct {
 	divs	[]divide
 	min		uint64
 	psize	uint8
 	load	uint8
 	max		uint64
-	l	sync.Mutex
+	l		sync.Mutex
 }
 
 func (s *standAllocator) Init(i uint64) error{
@@ -74,7 +68,7 @@ func (s *standAllocator) release(b ByteBuffer) {
 }
 
 func (s *standAllocator) doAlloc(length uint64) ByteBuffer {
-	index := postition(length)
+	index := position(length)
 	if s.divs[index].first == s.divs[index].last {
 		go s.backAlloc(index)
 	}
@@ -85,7 +79,7 @@ func (s *standAllocator) doAlloc(length uint64) ByteBuffer {
 	return v
 }
 
-func postition(length uint64) uint8 {
+func position(length uint64) uint8 {
 	v,ok := util.IsPow2(length)
 	if ok {
 		return uint8(v)
@@ -104,5 +98,4 @@ func (s *standAllocator) backAlloc(index uint8) {
 	s.divs[index].first = &result[0]
 	s.divs[index].last  = &result[s.load]
 }
-
 

@@ -70,9 +70,17 @@ func (a *BaseByteBuffer) Init(s uint64) error {
 }
 
 func (a *BaseByteBuffer) Destroy() error {
-	a.RP = 0
-	a.WP = 0
+	a.reset()
 	a.s = nil
 	//help gc
 	return nil
+}
+
+func (b *BaseByteBuffer) Release() {
+	b.a.release(b)
+}
+
+func (b *BaseByteBuffer) reset(){
+	b.WP = 0
+	b.RP = 0
 }

@@ -72,13 +72,5 @@ func (a *allocatorImpl) dynamicShrink() {
 
 type byteBufferImpl struct {
 	BaseByteBuffer
-	a    Allocator
-	s    []byte
-	mode OperatorMode
 }
-
-func (b *byteBufferImpl) Release() {
-	b.a.release(b)
-}
-
 
