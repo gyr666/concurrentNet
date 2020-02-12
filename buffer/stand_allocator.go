@@ -36,7 +36,7 @@ func (d *divide) Init(load uint8,index uint8){
 	d.s= MIN_BLOCK << index
 }
 
-func (d *divide) alloc(s Allocator) ByteBuffer{
+func (d *divide) alloc(s Allocator,next bool) ByteBuffer{
 	d.Lock()
 	d.oper++
 	d.give += d.s
@@ -44,7 +44,11 @@ func (d *divide) alloc(s Allocator) ByteBuffer{
 		d.c.Wait()
 	}
 	v := d.first.(*sByteBuffer)
-	d.first = v.c434bb()
+	var nb ByteBuffer
+	if next {
+		nb = s.Alloc(d.s>>1)
+	}
+	d.first = v.c434bb(nb)
 	// pre allocator
 	if d.first == nil {
 		go d.backAlloc(s,true)
@@ -98,9 +102,9 @@ type sByteBuffer struct {
 	index	uint8
 }
 
-func (s *sByteBuffer) c434bb() ByteBuffer{
+func (s *sByteBuffer) c434bb(buffer ByteBuffer) ByteBuffer{
 	p := s.next
-	s.next = nil
+	s.next = buffer
 	return p
 }
 
@@ -154,16 +158,18 @@ func (s *standAllocator) release(b ByteBuffer) {
 }
 
 func (s *standAllocator) doAlloc(length uint64) ByteBuffer {
-	index := position(length)
-	return s.divs[index].alloc(s)
+	index,next:= position(length)
+	return s.divs[index].alloc(s,next)
 }
 
-func position(length uint64) uint8 {
+func position(length uint64) (uint8,bool) {
 	v,ok := util.IsPow2(length)
-	if !ok {
-		return uint8(v)
+	if !ok && length& (1<<(v-1)) != 0{
+		return uint8(v),false
+	} else if !ok && length& (1<<(v-1)) == 0 {
+		return uint8(v) - 1 ,true
 	}
-	return uint8(v) - 1
+	return uint8(v) - 1,false
 }
 
 func (s *standAllocator) AllocSize() uint64 {
