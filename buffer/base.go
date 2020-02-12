@@ -1,10 +1,14 @@
 package buffer
 
 type Develop interface {
-	Init(s uint64) error
+	Init(uint64) error
 	Destroy() error
 }
 
+type BufferDevelop interface {
+	Init(uint64, Allocator)
+	Destroy() error
+}
 type IOer interface {
 	Writer
 	Reader

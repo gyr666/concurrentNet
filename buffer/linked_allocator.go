@@ -44,9 +44,9 @@ func (a *allocatorImpl) Alloc(length uint64) ByteBuffer {
 	if bf := a.findByUnusedList(length); bf != nil {
 		return bf
 	} else {
-		bf := byteBufferImpl{BaseByteBuffer: BaseByteBuffer{a:a}}
-		bf.Init(length)
-		return &bf
+		bf := new(byteBufferImpl)
+		bf.Init(length,a)
+		return bf
 	}
 }	
 
@@ -72,13 +72,5 @@ func (a *allocatorImpl) dynamicShrink() {
 
 type byteBufferImpl struct {
 	BaseByteBuffer
-	a    Allocator
-	s    []byte
-	mode OperatorMode
 }
-
-func (b *byteBufferImpl) Release() {
-	b.a.release(b)
-}
-
 
