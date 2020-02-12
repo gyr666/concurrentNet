@@ -9,8 +9,10 @@ import (
 // TestA  Test 必须写，后边的名称随便写
 func TestStandAllocator(t *testing.T) {
 	v := buffer.NewSandBufferAllocator()
+	g :=v.Alloc(17)
+	g.Size()
 	for i:=0;i<40;i++{
-		Equal(v.Alloc(30).Size(),32,"Size Test")
+		Equal(v.Alloc(17).Size(),32,"Size Test")
 	}
 	b := v.Alloc(32)
 	t.Logf("Size:%d", b.Size())
