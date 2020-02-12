@@ -21,8 +21,10 @@ func getMode(b bool) OperatorMode {
 type Allocator interface {
 	Develop
 	Alloc(uint64) ByteBuffer
+	OperatorTimes() uint64
 	release(ByteBuffer)
 	PoolSize() uint64
+	AllocSize() uint64
 }
 
 type ByteBuffer interface {

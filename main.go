@@ -14,7 +14,7 @@ func main() {
 			return d
 		})
 	}).
-	SetServerScoketChannel(core.Factory.NewParentChannelInstance()).
+	SetServerSocketChannel(core.Factory.NewParentChannelInstance()).
 	Option(&core.BackLog{},1024).
 	Option(&core.BufferLength{},2020).
 	Option(&core.NetWorkType{},core.TCP).
