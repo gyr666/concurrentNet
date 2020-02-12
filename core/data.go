@@ -8,7 +8,6 @@ type Data interface{
 type dataImpl struct{
 }
 
-
 func (d *dataImpl)Transfer(interface{}){
 }
 

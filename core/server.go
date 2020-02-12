@@ -5,7 +5,7 @@ type ChannelInCallback func(c Channel,p Pipeline)
 
 type Server interface{
 	OnChannelConnect(ChannelInCallback) Server
-	SetServerScoketChannel(ParentChannel) Server
+	SetServerSocketChannel(ParentChannel) Server
 	Option(OptionType,interface{}) Server
 	AddListen(*NetworkInet64) Server
 	Wtype(WaitType) Server
