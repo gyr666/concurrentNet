@@ -19,12 +19,14 @@ func Int2UInt8(i int) uint8 {
 func IsPow2(u uint64) (int,bool){
 	count := 0
 	max :=0
+	high := 0
 	var bin uint64 = 1
 	for ;bin<4294967295;max++ {
 		if (bin & u)!=0 {
 			count++
+			high = max
 		}
 		bin = bin << 1
 	}
-	return max,count==1
+	return high,count==1
 }

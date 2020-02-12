@@ -9,6 +9,9 @@ import (
 // TestA  Test 必须写，后边的名称随便写
 func TestStandAllocator(t *testing.T) {
 	v := buffer.NewSandBufferAllocator()
+	for i:=0;i<20;i++{
+		v.Alloc(32)
+	}
 	b := v.Alloc(32)
 	t.Logf("Size:%d", b.Size())
 	b.Release()
@@ -29,5 +32,4 @@ func TestStandAllocator(t *testing.T) {
 	b.Release()
 
 	t.Logf("Size:%d", v.PoolSize())
-
 }

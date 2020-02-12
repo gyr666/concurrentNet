@@ -4,14 +4,42 @@ import (
 	"gunplan.top/concurrentNet/util"
 	"sync"
 )
+const MIN_BLOCK = 2
 
 func NewSandBufferAllocator() Allocator{
-	return &standAllocator{}
+	alloc := standAllocator{}
+	alloc.Init(20)
+	return &alloc
 }
+
+func (b *sByteBuffer) Release() {
+	b.a.release(b)
+}
+
 type divide struct {
 	first	ByteBuffer
 	last	ByteBuffer
+	l		sync.Mutex
 	s		uint64
+	c       *sync.Cond
+}
+
+func (d *divide) Init(s uint64){
+	d.c = sync.NewCond(&d.l)
+	d.s=s
+}
+
+func (d *divide) Lock(){
+	d.l.Lock()
+}
+
+func (d *divide) Unlock(){
+	d.l.Unlock()
+}
+
+func (d *divide) setLink(sta,end *sByteBuffer){
+	d.first = sta
+	d.last = end
 }
 
 type sByteBuffer struct {
@@ -20,6 +48,11 @@ type sByteBuffer struct {
 	index	uint8
 }
 
+func (s *sByteBuffer) c434bb() ByteBuffer{
+	p := s.next
+	s.next = nil
+	return p
+}
 
 type standAllocator struct {
 	divs	[]divide
@@ -27,19 +60,20 @@ type standAllocator struct {
 	psize	uint8
 	load	uint8
 	max		uint64
-	l		sync.Mutex
 }
 
 func (s *standAllocator) Init(i uint64) error{
 	// create alloc index
+	s.psize = uint8(i)
+	s.load = s.psize
+	s.min = MIN_BLOCK
+	s.max = MIN_BLOCK << s.psize-1;
 	s.divs = make([]divide,s.psize)
 	for i,_:= range s.divs {
-		s.divs[i].s = 2 << i
+		s.divs[i].Init(2<<i)
 		// at init process, don't need create threads.
-		s.backAlloc(util.Int2UInt8(i))
+		s.backAlloc(util.Int2UInt8(i),false)
 	}
-	s.min = 2;
-	s.max = 2 << s.psize-1;
 	return nil
 }
 
@@ -51,7 +85,7 @@ func (s *standAllocator) Alloc(length uint64) ByteBuffer {
 	if(length > s.max) {
 		return nil
 	}
-	return s.doAlloc(length);
+	return s.doAlloc(length)
 }
 
 func (s *standAllocator) PoolSize() uint64 {
@@ -69,33 +103,41 @@ func (s *standAllocator) release(b ByteBuffer) {
 
 func (s *standAllocator) doAlloc(length uint64) ByteBuffer {
 	index := position(length)
-	if s.divs[index].first == s.divs[index].last {
-		go s.backAlloc(index)
+	block := &s.divs[index]
+	block.Lock()
+	for ;block.first == nil; {
+		block.c.Wait()
 	}
-	s.l.Lock()
-	v := s.divs[index].first.(*sByteBuffer)
-	s.divs[index].first = v.next
-	s.l.Unlock();
+	v := block.first.(*sByteBuffer)
+	block.first = v.c434bb()
+	// pre allocator
+	if block.first == block.last {
+		go s.backAlloc(index,true)
+	}
+	block.Unlock()
 	return v
 }
 
 func position(length uint64) uint8 {
 	v,ok := util.IsPow2(length)
-	if ok {
+	if !ok {
 		return uint8(v)
 	}
-	return uint8(v+1)
+	return uint8(v) - 1
 }
 
 //this process is very important
-func (s *standAllocator) backAlloc(index uint8) {
-	s.l.Lock()
-	defer s.l.Unlock()
+func (s *standAllocator) backAlloc(index uint8,release bool) {
+	s.divs[index].Lock()
+	defer s.divs[index].Unlock()
 	result := make([]sByteBuffer,s.load)
-	for i,_ := range result {
+	for i := 0;i<len(result)-1 ;i++ {
+		result[i].Init(s.divs[index].s,s)
+		result[i].index = index
 		result[i].next = &result[i+1]
 	}
-	s.divs[index].first = &result[0]
-	s.divs[index].last  = &result[s.load]
+	s.divs[index].setLink(&result[0],&result[s.load-1])
+	if release {
+		s.divs[index].c.Broadcast()
+	}
 }
-
