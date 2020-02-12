@@ -22,7 +22,7 @@ type sByteBuffer struct {
 
 
 func (c *sByteBuffer) Release() {
-
+	c.a.release(c)
 }
 
 
@@ -36,7 +36,7 @@ type standAllocator struct {
 	l	sync.Mutex
 }
 
-func (s *standAllocator) Init() error{
+func (s *standAllocator) Init(i uint64) error{
 	// create alloc index
 	s.divs = make([]divide,s.psize)
 	for i,_:= range s.divs {
@@ -86,15 +86,15 @@ func (s *standAllocator) doAlloc(length uint64) ByteBuffer {
 }
 
 func postition(length uint64) uint8 {
-	 v,ok := util.IsPow2(length)
+	v,ok := util.IsPow2(length)
 	if ok {
-		return v
+		return uint8(v)
 	}
-	return v+1
+	return uint8(v+1)
 }
 
 //this process is very important
-func (s *standAllocator) backAlloc(index uint8) ByteBuffer {
+func (s *standAllocator) backAlloc(index uint8) {
 	s.l.Lock()
 	defer s.l.Unlock()
 	result := make([]sByteBuffer,s.load)
