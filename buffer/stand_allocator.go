@@ -1,9 +1,11 @@
+// A fast memory allocator support high concurrency
 package buffer
 
 import (
 	"gunplan.top/concurrentNet/util"
 	"sync"
 )
+
 const MIN_BLOCK = 2
 
 func NewSandBufferAllocator() Allocator{
@@ -17,16 +19,47 @@ func (b *sByteBuffer) Release() {
 }
 
 type divide struct {
-	first	ByteBuffer
-	last	ByteBuffer
-	l		sync.Mutex
-	s		uint64
-	c       *sync.Cond
+	first ByteBuffer
+	l     sync.Mutex
+	s     uint64
+	c     *sync.Cond
+	index uint8
+	give  uint64
+	oper  uint64
+	load  uint8
 }
 
-func (d *divide) Init(s uint64){
+func (d *divide) Init(load uint8,index uint8){
 	d.c = sync.NewCond(&d.l)
-	d.s=s
+	d.load = load
+	d.index = index
+	d.s= MIN_BLOCK << index
+}
+
+func (d *divide) alloc(s Allocator) ByteBuffer{
+	d.Lock()
+	d.oper++
+	d.give += d.s
+	for ;d.first == nil; {
+		d.c.Wait()
+	}
+	v := d.first.(*sByteBuffer)
+	d.first = v.c434bb()
+	// pre allocator
+	if d.first == nil {
+		go d.backAlloc(s,true)
+	}
+	d.Unlock()
+	return v
+}
+
+func (d *divide) release(buffer *sByteBuffer){
+	d.l.Lock()
+	defer d.l.Unlock()
+	d.oper++
+	d.give -= d.s
+	buffer.next = d.first
+	d.first = buffer
 }
 
 func (d *divide) Lock(){
@@ -37,9 +70,26 @@ func (d *divide) Unlock(){
 	d.l.Unlock()
 }
 
-func (d *divide) setLink(sta,end *sByteBuffer){
+func (d *divide) setLink(sta *sByteBuffer){
 	d.first = sta
-	d.last = end
+}
+
+func (d *divide) backAlloc(s Allocator,release bool) {
+	d.Lock()
+	result := make([]sByteBuffer,d.load)
+	for i := 0;;i++ {
+		result[i].Init(d.s,s)
+		result[i].index = d.index
+		if i == len(result)-1 {
+			break
+		}
+		result[i].next = &result[i+1]
+	}
+	d.setLink(&result[0])
+	d.Unlock()
+	if release {
+		d.c.Broadcast()
+	}
 }
 
 type sByteBuffer struct {
@@ -65,16 +115,23 @@ type standAllocator struct {
 func (s *standAllocator) Init(i uint64) error{
 	// create alloc index
 	s.psize = uint8(i)
-	s.load = s.psize
 	s.min = MIN_BLOCK
-	s.max = MIN_BLOCK << s.psize-1;
+	s.max = MIN_BLOCK << s.psize-1
 	s.divs = make([]divide,s.psize)
 	for i,_:= range s.divs {
-		s.divs[i].Init(2<<i)
+		s.divs[i].Init(s.psize,uint8(i))
 		// at init process, don't need create threads.
-		s.backAlloc(util.Int2UInt8(i),false)
+		s.divs[i].backAlloc(s,false)
 	}
 	return nil
+}
+
+func (s *standAllocator) OperatorTimes() uint64 {
+	var val uint64 = 0
+	for _,v := range s.divs {
+		val += v.oper
+	}
+	return val
 }
 
 func (s *standAllocator) Destroy() error{
@@ -93,29 +150,12 @@ func (s *standAllocator) PoolSize() uint64 {
 }
 
 func (s *standAllocator) release(b ByteBuffer) {
-	bb ,ok:= b.(*sByteBuffer)
-	if !ok {
-		panic("release error!")
-	}
-	bb.next = s.divs[bb.index].first
-	s.divs[bb.index].first = bb
+	s.divs[b.(*sByteBuffer).index].release(b.(*sByteBuffer))
 }
 
 func (s *standAllocator) doAlloc(length uint64) ByteBuffer {
 	index := position(length)
-	block := &s.divs[index]
-	block.Lock()
-	for ;block.first == nil; {
-		block.c.Wait()
-	}
-	v := block.first.(*sByteBuffer)
-	block.first = v.c434bb()
-	// pre allocator
-	if block.first == block.last {
-		go s.backAlloc(index,true)
-	}
-	block.Unlock()
-	return v
+	return s.divs[index].alloc(s)
 }
 
 func position(length uint64) uint8 {
@@ -126,18 +166,10 @@ func position(length uint64) uint8 {
 	return uint8(v) - 1
 }
 
-//this process is very important
-func (s *standAllocator) backAlloc(index uint8,release bool) {
-	s.divs[index].Lock()
-	defer s.divs[index].Unlock()
-	result := make([]sByteBuffer,s.load)
-	for i := 0;i<len(result)-1 ;i++ {
-		result[i].Init(s.divs[index].s,s)
-		result[i].index = index
-		result[i].next = &result[i+1]
+func (s *standAllocator) AllocSize() uint64 {
+	var val uint64 = 0
+	for _,v := range s.divs {
+		val += v.give
 	}
-	s.divs[index].setLink(&result[0],&result[s.load-1])
-	if release {
-		s.divs[index].c.Broadcast()
-	}
+	return val
 }

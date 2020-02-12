@@ -74,3 +74,10 @@ type byteBufferImpl struct {
 	BaseByteBuffer
 }
 
+func (s *allocatorImpl) OperatorTimes() uint64 {
+	return 0
+}
+
+func (s *allocatorImpl) AllocSize() uint64 {
+	return 0
+}
