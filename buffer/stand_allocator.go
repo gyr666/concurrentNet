@@ -6,16 +6,16 @@ import (
 	"sync"
 )
 
-const MIN_BLOCK = 2
+const MinBlock = 2
 
 func NewSandBufferAllocator() Allocator{
 	alloc := standAllocator{}
-	alloc.Init(20)
+	_ = alloc.Init(20)
 	return &alloc
 }
 
-func (b *sByteBuffer) Release() {
-	b.a.release(b)
+func (s *sByteBuffer) Release() {
+	s.a.release(s)
 }
 
 type divide struct {
@@ -26,17 +26,19 @@ type divide struct {
 	index uint8
 	give  uint64
 	oper  uint64
+	a 	  Allocator
 	load  uint8
 }
 
-func (d *divide) Init(load uint8,index uint8){
+func (d *divide) Init(a Allocator,load uint8,index uint8){
 	d.c = sync.NewCond(&d.l)
 	d.load = load
 	d.index = index
-	d.s= MIN_BLOCK << index
+	d.s= MinBlock << index
+	d.a = a
 }
 
-func (d *divide) alloc(s Allocator,next bool) ByteBuffer{
+func (d *divide) alloc() ByteBuffer{
 	d.Lock()
 	d.oper++
 	d.give += d.s
@@ -44,14 +46,10 @@ func (d *divide) alloc(s Allocator,next bool) ByteBuffer{
 		d.c.Wait()
 	}
 	v := d.first.(*sByteBuffer)
-	var nb ByteBuffer
-	if next {
-		nb = s.Alloc(d.s>>1)
-	}
-	d.first = v.c434bb(nb)
+	d.first = v.addLast(nil)
 	// pre allocator
 	if d.first == nil {
-		go d.backAlloc(s,true)
+		go d.backAlloc(true)
 	}
 	d.Unlock()
 	return v
@@ -78,11 +76,11 @@ func (d *divide) setLink(sta *sByteBuffer){
 	d.first = sta
 }
 
-func (d *divide) backAlloc(s Allocator,release bool) {
+func (d *divide) backAlloc(release bool) {
 	d.Lock()
 	result := make([]sByteBuffer,d.load)
 	for i := 0;;i++ {
-		result[i].Init(d.s,s)
+		result[i].Init(d.s,d.a)
 		result[i].index = d.index
 		if i == len(result)-1 {
 			break
@@ -100,9 +98,10 @@ type sByteBuffer struct {
 	BaseByteBuffer
 	next	ByteBuffer
 	index	uint8
+	sumSize uint64
 }
 
-func (s *sByteBuffer) c434bb(buffer ByteBuffer) ByteBuffer{
+func (s *sByteBuffer) addLast(buffer ByteBuffer) ByteBuffer{
 	p := s.next
 	s.next = buffer
 	return p
@@ -114,19 +113,25 @@ type standAllocator struct {
 	psize	uint8
 	load	uint8
 	max		uint64
+	w		sync.WaitGroup
 }
 
 func (s *standAllocator) Init(i uint64) error{
 	// create alloc index
 	s.psize = uint8(i)
-	s.min = MIN_BLOCK
-	s.max = MIN_BLOCK << s.psize-1
+	s.min = MinBlock
+	s.max = MinBlock<< s.psize-1
 	s.divs = make([]divide,s.psize)
-	for i,_:= range s.divs {
-		s.divs[i].Init(s.psize,uint8(i))
-		// at init process, don't need create threads.
-		s.divs[i].backAlloc(s,false)
+	s.w.Add(int(s.psize))
+	for _,v:= range s.divs {
+		go func(vl *divide) {
+			vl.Init(s, s.psize, uint8(i))
+			// at init process, don't need create threads.
+			vl.backAlloc(false)
+			s.w.Done()
+		}(&v)
 	}
+	s.w.Wait()
 	return nil
 }
 
@@ -143,7 +148,7 @@ func (s *standAllocator) Destroy() error{
 }
 
 func (s *standAllocator) Alloc(length uint64) ByteBuffer {
-	if(length > s.max) {
+	if length > s.max {
 		return nil
 	}
 	return s.doAlloc(length)
@@ -154,22 +159,27 @@ func (s *standAllocator) PoolSize() uint64 {
 }
 
 func (s *standAllocator) release(b ByteBuffer) {
-	s.divs[b.(*sByteBuffer).index].release(b.(*sByteBuffer))
+	release := b.(*sByteBuffer)
+	for ;release != nil; {
+		go func() { s.divs[release.index].release(release) }()
+		release = release.next.(*sByteBuffer)
+	}
 }
 
 func (s *standAllocator) doAlloc(length uint64) ByteBuffer {
-	index,next:= position(length)
-	return s.divs[index].alloc(s,next)
+	 r :=position(length)
+	 //divide first
+	 var b = s.divs[r[len(r)-1]].alloc().(*sByteBuffer)
+	 l :=b
+	 for i := len(r)-2;i>=0;i--{
+		 l.next = s.divs[r[i]].alloc()
+		 l = l.next.(*sByteBuffer)
+	 }
+	return b
 }
 
-func position(length uint64) (uint8,bool) {
-	v,ok := util.IsPow2(length)
-	if !ok && length& (1<<(v-1)) != 0{
-		return uint8(v),false
-	} else if !ok && length& (1<<(v-1)) == 0 {
-		return uint8(v) - 1 ,true
-	}
-	return uint8(v) - 1,false
+func position(length uint64)[]uint8 {
+	return util.IsPow2(length)
 }
 
 func (s *standAllocator) AllocSize() uint64 {
@@ -178,4 +188,20 @@ func (s *standAllocator) AllocSize() uint64 {
 		val += v.give
 	}
 	return val
+}
+
+func (s *sByteBuffer) Read(int) ([]byte, error){
+	return util.StandRead(0, s.s, s.capital,&s.RP)
+}
+
+func (s *sByteBuffer) Write(_b []byte) error {
+	//this is too simple
+	if util.Int2Uint64(len(_b)) < s.capital-s.WP {
+		return util.StandWrite(s.s, s.capital,&s.WP,_b)
+	}
+	return nil
+	//
+	//if b.next != nil && util.Int2Uint64(len(_b)) < (b.capital-b.WP)+b.next.Size() {
+	//
+	//}
 }

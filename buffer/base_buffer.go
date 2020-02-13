@@ -28,7 +28,7 @@ type Allocator interface {
 }
 
 type ByteBuffer interface {
-	BufferDevelop
+	ByteBufferDevelop
 	IOer
 	Release()
 	Size() uint64
@@ -58,11 +58,11 @@ func (b *BaseByteBuffer) Size() uint64 {
 }
 
 func (b *BaseByteBuffer) Read(i int) ([]byte, error) {
-	return util.StandRead(i,b.s,b.capital,&b.RP)
+	return util.StandRead(i, b.s, b.capital,&b.RP)
 }
 
 func (b *BaseByteBuffer) Write(_b []byte) error {
-	return util.StandWrite(b.s,b.capital,&b.WP,_b)
+	return util.StandWrite(b.s, b.capital,&b.WP,_b)
 }
 
 func (b *BaseByteBuffer) Init(s uint64,all Allocator) {
@@ -71,9 +71,9 @@ func (b *BaseByteBuffer) Init(s uint64,all Allocator) {
 	b.s = make([]byte, b.capital)
 }
 
-func (a *BaseByteBuffer) Destroy() error {
-	a.reset()
-	a.s = nil
+func (b *BaseByteBuffer) Destroy() error {
+	b.reset()
+	b.s = nil
 	//help gc
 	return nil
 }

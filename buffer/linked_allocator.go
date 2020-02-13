@@ -19,7 +19,7 @@ type allocatorImpl struct {
 	l       sync.Mutex
 }
 
-func (a *allocatorImpl) Init(s uint64) error {
+func (a *allocatorImpl) Init(uint64) error {
 	a.unUsed = util.NewSkipList()
 	a.counter = util.NewCounter()
 	a.counter.Boot()
@@ -45,7 +45,7 @@ func (a *allocatorImpl) Alloc(length uint64) ByteBuffer {
 		return bf
 	}
 	bf := new(byteBufferImpl)
-	bf.Init(length,a)
+	bf.Init(length, a)
 	return bf
 }	
 
@@ -74,10 +74,10 @@ type byteBufferImpl struct {
 	BaseByteBuffer
 }
 
-func (s *allocatorImpl) OperatorTimes() uint64 {
-	return s.counter.Size()
+func (a *allocatorImpl) OperatorTimes() uint64 {
+	return a.counter.Size()
 }
 
-func (s *allocatorImpl) AllocSize() uint64 {
-	return s.counter.Use()
+func (a *allocatorImpl) AllocSize() uint64 {
+	return a.counter.Use()
 }
