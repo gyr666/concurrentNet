@@ -2,13 +2,14 @@
 package buffer
 
 import (
-	"gunplan.top/concurrentNet/util"
 	"sync"
+
+	"gunplan.top/concurrentNet/util"
 )
 
 const MinBlock = 2
 
-func NewSandBufferAllocator() Allocator{
+func NewSandBufferAllocator() Allocator {
 	alloc := standAllocator{}
 	_ = alloc.Init(20)
 	return &alloc
@@ -26,23 +27,23 @@ type divide struct {
 	index uint8
 	give  uint64
 	oper  uint64
-	a 	  Allocator
+	a     Allocator
 	load  uint8
 }
 
-func (d *divide) Init(a Allocator,load uint8,index uint8){
+func (d *divide) Init(a Allocator, load uint8, index uint8) {
 	d.c = sync.NewCond(&d.l)
 	d.load = load
 	d.index = index
-	d.s= MinBlock << index
+	d.s = MinBlock << index
 	d.a = a
 }
 
-func (d *divide) alloc() ByteBuffer{
+func (d *divide) alloc() ByteBuffer {
 	d.Lock()
 	d.oper++
 	d.give += d.s
-	for ;d.first == nil; {
+	for d.first == nil {
 		d.c.Wait()
 	}
 	v := d.first.(*sByteBuffer)
@@ -55,7 +56,7 @@ func (d *divide) alloc() ByteBuffer{
 	return v
 }
 
-func (d *divide) release(buffer *sByteBuffer){
+func (d *divide) release(buffer *sByteBuffer) {
 	d.l.Lock()
 	defer d.l.Unlock()
 	d.oper++
@@ -64,23 +65,23 @@ func (d *divide) release(buffer *sByteBuffer){
 	d.first = buffer
 }
 
-func (d *divide) Lock(){
+func (d *divide) Lock() {
 	d.l.Lock()
 }
 
-func (d *divide) Unlock(){
+func (d *divide) Unlock() {
 	d.l.Unlock()
 }
 
-func (d *divide) setLink(sta *sByteBuffer){
+func (d *divide) setLink(sta *sByteBuffer) {
 	d.first = sta
 }
 
 func (d *divide) backAlloc(release bool) {
 	d.Lock()
-	result := make([]sByteBuffer,d.load)
-	for i := 0;;i++ {
-		result[i].Init(d.s,d.a)
+	result := make([]sByteBuffer, d.load)
+	for i := 0; ; i++ {
+		result[i].Init(d.s, d.a)
 		result[i].index = d.index
 		if i == len(result)-1 {
 			break
@@ -96,34 +97,34 @@ func (d *divide) backAlloc(release bool) {
 
 type sByteBuffer struct {
 	BaseByteBuffer
-	next	ByteBuffer
-	index	uint8
+	next    ByteBuffer
+	index   uint8
 	sumSize uint64
 }
 
-func (s *sByteBuffer) addLast(buffer ByteBuffer) ByteBuffer{
+func (s *sByteBuffer) addLast(buffer ByteBuffer) ByteBuffer {
 	p := s.next
 	s.next = buffer
 	return p
 }
 
 type standAllocator struct {
-	divs	[]divide
-	min		uint64
-	psize	uint8
-	load	uint8
-	max		uint64
-	w		sync.WaitGroup
+	divs  []divide
+	min   uint64
+	psize uint8
+	load  uint8
+	max   uint64
+	w     sync.WaitGroup
 }
 
-func (s *standAllocator) Init(i uint64) error{
+func (s *standAllocator) Init(i uint64) error {
 	// create alloc index
 	s.psize = uint8(i)
 	s.min = MinBlock
-	s.max = MinBlock<< s.psize-1
-	s.divs = make([]divide,s.psize)
+	s.max = MinBlock<<s.psize - 1
+	s.divs = make([]divide, s.psize)
 	s.w.Add(int(s.psize))
-	for _,v:= range s.divs {
+	for _, v := range s.divs {
 		go func(vl *divide) {
 			vl.Init(s, s.psize, uint8(i))
 			// at init process, don't need create threads.
@@ -137,13 +138,13 @@ func (s *standAllocator) Init(i uint64) error{
 
 func (s *standAllocator) OperatorTimes() uint64 {
 	var val uint64 = 0
-	for _,v := range s.divs {
+	for _, v := range s.divs {
 		val += v.oper
 	}
 	return val
 }
 
-func (s *standAllocator) Destroy() error{
+func (s *standAllocator) Destroy() error {
 	return nil
 }
 
@@ -160,44 +161,44 @@ func (s *standAllocator) PoolSize() uint64 {
 
 func (s *standAllocator) release(b ByteBuffer) {
 	release := b.(*sByteBuffer)
-	for ;release != nil; {
+	for release != nil {
 		go func() { s.divs[release.index].release(release) }()
 		release = release.next.(*sByteBuffer)
 	}
 }
 
 func (s *standAllocator) doAlloc(length uint64) ByteBuffer {
-	 r :=position(length)
-	 //divide first
-	 var b = s.divs[r[len(r)-1]].alloc().(*sByteBuffer)
-	 l :=b
-	 for i := len(r)-2;i>=0;i--{
-		 l.next = s.divs[r[i]].alloc()
-		 l = l.next.(*sByteBuffer)
-	 }
+	r := position(length)
+	//divide first
+	var b = s.divs[r[len(r)-1]].alloc().(*sByteBuffer)
+	l := b
+	for i := len(r) - 2; i >= 0; i-- {
+		l.next = s.divs[r[i]].alloc()
+		l = l.next.(*sByteBuffer)
+	}
 	return b
 }
 
-func position(length uint64)[]uint8 {
+func position(length uint64) []uint8 {
 	return util.IsPow2(length)
 }
 
 func (s *standAllocator) AllocSize() uint64 {
 	var val uint64 = 0
-	for _,v := range s.divs {
+	for _, v := range s.divs {
 		val += v.give
 	}
 	return val
 }
 
-func (s *sByteBuffer) Read(int) ([]byte, error){
-	return util.StandRead(0, s.s, s.capital,&s.RP)
+func (s *sByteBuffer) Read(int) ([]byte, error) {
+	return util.StandRead(0, s.s, s.capital, &s.RP)
 }
 
 func (s *sByteBuffer) Write(_b []byte) error {
 	//this is too simple
 	if util.Int2Uint64(len(_b)) < s.capital-s.WP {
-		return util.StandWrite(s.s, s.capital,&s.WP,_b)
+		return util.StandWrite(s.s, s.capital, &s.WP, _b)
 	}
 	return nil
 	//

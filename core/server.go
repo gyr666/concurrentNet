@@ -1,12 +1,11 @@
 package core
 
+type ChannelInCallback func(c Channel, p Pipeline)
 
-type ChannelInCallback func(c Channel,p Pipeline)
-
-type Server interface{
+type Server interface {
 	OnChannelConnect(ChannelInCallback) Server
 	SetServerSocketChannel(ParentChannel) Server
-	Option(OptionType,interface{}) Server
+	Option(OptionType, interface{}) Server
 	AddListen(*NetworkInet64) Server
 	Wtype(WaitType) Server
 	RegObserve(ServerObserve) Server
@@ -15,8 +14,7 @@ type Server interface{
 	Join()
 }
 
-
-type ServerImpl struct{
+type ServerImpl struct {
 	u chan uint8
 	c ChannelInCallback
 	i ParentChannel
@@ -26,34 +24,34 @@ type ServerImpl struct{
 	s bool
 }
 
-func (s*ServerImpl) Init() Server{
-	s.u = make(chan uint8,1)
-	s.n = make([]NetworkInet64,1)
+func (s *ServerImpl) Init() Server {
+	s.u = make(chan uint8, 1)
+	s.n = make([]NetworkInet64, 1)
 	s.o = &DefaultObserve{}
 	return s
 }
 
-func (s*ServerImpl) RegObserve(o ServerObserve) Server{
+func (s *ServerImpl) RegObserve(o ServerObserve) Server {
 	s.o = o
 	return s
 }
 
-func (s*ServerImpl) OnChannelConnect(c ChannelInCallback) Server{
+func (s *ServerImpl) OnChannelConnect(c ChannelInCallback) Server {
 	s.c = c
 	return s
 }
 
-func (s*ServerImpl) SetServerSocketChannel(i ParentChannel) Server{
+func (s *ServerImpl) SetServerSocketChannel(i ParentChannel) Server {
 	s.i = i
 	return s
 }
 
-func (s*ServerImpl) Option(o OptionType,i interface{}) Server{
+func (s *ServerImpl) Option(o OptionType, i interface{}) Server {
 	_ = o.doSet(i)
 	return s
 }
 
-func (s*ServerImpl) AddListen(n *NetworkInet64) Server{
+func (s *ServerImpl) AddListen(n *NetworkInet64) Server {
 	if s.i == nil {
 		panic("please set parent channel")
 	}
@@ -61,22 +59,22 @@ func (s*ServerImpl) AddListen(n *NetworkInet64) Server{
 	return s
 }
 
-func (s*ServerImpl) Wtype(w WaitType) Server{
+func (s *ServerImpl) Wtype(w WaitType) Server {
 	s.t = w
 	return s
 }
 
-func (s*ServerImpl) Stop(){
+func (s *ServerImpl) Stop() {
 	s.o.OnStopping()
 	s.u <- 1
 	s.o.OnStopped()
 }
 
-func (s*ServerImpl) Join() {
+func (s *ServerImpl) Join() {
 	<-s.u
 }
 
-func (s*ServerImpl) Sync() uint8 {
+func (s *ServerImpl) Sync() uint8 {
 	s.o.OnBooting()
 	//todo use callback
 	if s.s {

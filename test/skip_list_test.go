@@ -1,7 +1,6 @@
 package test
 
 import (
-	"fmt"
 	"gunplan.top/concurrentNet/util"
 
 	"testing"
@@ -12,6 +11,7 @@ func TestSkipList(t *testing.T) {
 	l.Insert(2, 7)
 	l.Insert(5, 9)
 	l.Insert(6, 9999)
-	fmt.Print(l.Search(4))
+	d, _ := l.Search(4)
+	Equal(d, 5, "divide")
 
 }

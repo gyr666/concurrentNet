@@ -2,8 +2,9 @@ package test
 
 import (
 	"fmt"
-	"gunplan.top/concurrentNet/util"
 	"testing"
+
+	"gunplan.top/concurrentNet/util"
 )
 
 func TestCounter(t *testing.T) {

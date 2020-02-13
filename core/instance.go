@@ -1,5 +1,4 @@
 package core
 
-type ServerInstance interface{
-
+type ServerInstance interface {
 }

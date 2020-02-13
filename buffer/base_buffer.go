@@ -42,7 +42,7 @@ type BaseByteBuffer struct {
 	WP      uint64
 	RP      uint64
 	RWType  bool
-	s 		[]byte
+	s       []byte
 }
 
 func (b *BaseByteBuffer) convert() {
@@ -58,14 +58,14 @@ func (b *BaseByteBuffer) Size() uint64 {
 }
 
 func (b *BaseByteBuffer) Read(i int) ([]byte, error) {
-	return util.StandRead(i, b.s, b.capital,&b.RP)
+	return util.StandRead(i, b.s, b.capital, &b.RP)
 }
 
 func (b *BaseByteBuffer) Write(_b []byte) error {
-	return util.StandWrite(b.s, b.capital,&b.WP,_b)
+	return util.StandWrite(b.s, b.capital, &b.WP, _b)
 }
 
-func (b *BaseByteBuffer) Init(s uint64,all Allocator) {
+func (b *BaseByteBuffer) Init(s uint64, all Allocator) {
 	b.capital = s
 	b.a = all
 	b.s = make([]byte, b.capital)
@@ -82,7 +82,7 @@ func (b *BaseByteBuffer) Release() {
 	b.a.release(b)
 }
 
-func (b *BaseByteBuffer) reset(){
+func (b *BaseByteBuffer) reset() {
 	b.WP = 0
 	b.RP = 0
 }
