@@ -6,16 +6,16 @@ import (
 	"sync"
 )
 
-const MIN_BLOCK = 2
+const MinBlock = 2
 
 func NewSandBufferAllocator() Allocator{
 	alloc := standAllocator{}
-	alloc.Init(20)
+	_ = alloc.Init(20)
 	return &alloc
 }
 
-func (b *sByteBuffer) Release() {
-	b.a.release(b)
+func (s *sByteBuffer) Release() {
+	s.a.release(s)
 }
 
 type divide struct {
@@ -34,7 +34,7 @@ func (d *divide) Init(a Allocator,load uint8,index uint8){
 	d.c = sync.NewCond(&d.l)
 	d.load = load
 	d.index = index
-	d.s= MIN_BLOCK << index
+	d.s= MinBlock << index
 	d.a = a
 }
 
@@ -119,8 +119,8 @@ type standAllocator struct {
 func (s *standAllocator) Init(i uint64) error{
 	// create alloc index
 	s.psize = uint8(i)
-	s.min = MIN_BLOCK
-	s.max = MIN_BLOCK << s.psize-1
+	s.min = MinBlock
+	s.max = MinBlock<< s.psize-1
 	s.divs = make([]divide,s.psize)
 	s.w.Add(int(s.psize))
 	for _,v:= range s.divs {
@@ -148,7 +148,7 @@ func (s *standAllocator) Destroy() error{
 }
 
 func (s *standAllocator) Alloc(length uint64) ByteBuffer {
-	if(length > s.max) {
+	if length > s.max {
 		return nil
 	}
 	return s.doAlloc(length)
@@ -169,7 +169,7 @@ func (s *standAllocator) release(b ByteBuffer) {
 func (s *standAllocator) doAlloc(length uint64) ByteBuffer {
 	 r :=position(length)
 	 //divide first
-	 var b *sByteBuffer = s.divs[r[len(r)-1]].alloc().(*sByteBuffer)
+	 var b = s.divs[r[len(r)-1]].alloc().(*sByteBuffer)
 	 l :=b
 	 for i := len(r)-2;i>=0;i--{
 		 l.next = s.divs[r[i]].alloc()
@@ -190,14 +190,14 @@ func (s *standAllocator) AllocSize() uint64 {
 	return val
 }
 
-func (b *sByteBuffer) Read(int) ([]byte, error){
-	return util.StandRead(0,b.s,b.capital,&b.RP)
+func (s *sByteBuffer) Read(int) ([]byte, error){
+	return util.StandRead(0, s.s, s.capital,&s.RP)
 }
 
-func (b *sByteBuffer) Write(_b []byte) error {
+func (s *sByteBuffer) Write(_b []byte) error {
 	//this is too simple
-	if util.Int2Uint64(len(_b)) < b.capital-b.WP {
-		return util.StandWrite(b.s,b.capital,&b.WP,_b)
+	if util.Int2Uint64(len(_b)) < s.capital-s.WP {
+		return util.StandWrite(s.s, s.capital,&s.WP,_b)
 	}
 	return nil
 	//

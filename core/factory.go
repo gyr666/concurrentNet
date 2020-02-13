@@ -1,6 +1,6 @@
 package core
 
-var Factory ChannelFactory = ChannelFactory{}
+var Factory = ChannelFactory{}
 
 func NewConcurrentNet() Server{
 	s := ServerImpl{}

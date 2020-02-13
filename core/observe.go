@@ -3,8 +3,8 @@ import "fmt"
 type ServerObserve interface{
 	OnBooting()
 	OnBooted(l []NetworkInet64)
-	OnStoping()
-	OnStoped()
+	OnStopping()
+	OnStopped()
 }
 
 type DefaultObserve struct{
@@ -16,10 +16,10 @@ func (d *DefaultObserve)OnBooting(){
 func (d *DefaultObserve)OnBooted(l []NetworkInet64){
 	fmt.Printf("On Booted %#v",l)
 }
-func (d *DefaultObserve)OnStoping(){
-	fmt.Println("On Stoping")
+func (d *DefaultObserve) OnStopping(){
+	fmt.Println("On Stopping")
 }
-func (d *DefaultObserve)OnStoped(){
-	fmt.Println("On Stoped")
+func (d *DefaultObserve) OnStopped(){
+	fmt.Println("On Stopped")
 
 }

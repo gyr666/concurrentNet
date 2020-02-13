@@ -43,13 +43,13 @@ func (s*ServerImpl) OnChannelConnect(c ChannelInCallback) Server{
 	return s
 }
 
-func (s*ServerImpl) SetServerScoketChannel(i ParentChannel) Server{
+func (s*ServerImpl) SetServerSocketChannel(i ParentChannel) Server{
 	s.i = i
 	return s
 }
 
 func (s*ServerImpl) Option(o OptionType,i interface{}) Server{
-	o.doSet(i)
+	_ = o.doSet(i)
 	return s
 }
 
@@ -67,9 +67,9 @@ func (s*ServerImpl) Wtype(w WaitType) Server{
 }
 
 func (s*ServerImpl) Stop(){
-	s.o.OnStoping()
+	s.o.OnStopping()
 	s.u <- 1
-	s.o.OnStoped()
+	s.o.OnStopped()
 }
 
 func (s*ServerImpl) Join() {

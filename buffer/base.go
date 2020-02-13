@@ -5,7 +5,7 @@ type Develop interface {
 	Destroy() error
 }
 
-type BufferDevelop interface {
+type ByteBufferDevelop interface {
 	Init(uint64, Allocator)
 	Destroy() error
 }
