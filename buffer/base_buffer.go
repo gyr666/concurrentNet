@@ -31,6 +31,7 @@ type ByteBuffer interface {
 	ByteBufferDevelop
 	IOer
 	Release()
+	Reset()
 	Size() uint64
 	convert()
 	Mode() OperatorMode
@@ -72,7 +73,7 @@ func (b *BaseByteBuffer) Init(s uint64, all Allocator) {
 }
 
 func (b *BaseByteBuffer) Destroy() error {
-	b.reset()
+	b.Reset()
 	b.s = nil
 	//help gc
 	return nil
@@ -82,7 +83,7 @@ func (b *BaseByteBuffer) Release() {
 	b.a.release(b)
 }
 
-func (b *BaseByteBuffer) reset() {
+func (b *BaseByteBuffer) Reset() {
 	b.WP = 0
 	b.RP = 0
 }
