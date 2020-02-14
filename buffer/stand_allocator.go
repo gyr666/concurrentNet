@@ -2,9 +2,9 @@
 package buffer
 
 import (
-	"sync"
-
+	"errors"
 	"gunplan.top/concurrentNet/util"
+	"sync"
 )
 
 const MinBlock = 2
@@ -82,6 +82,7 @@ func (d *divide) backAlloc(release bool) {
 	result := make([]sByteBuffer, d.load)
 	for i := 0; ; i++ {
 		result[i].Init(d.s, d.a)
+		result[i].sumSize += result[i].capital
 		result[i].index = d.index
 		if i == len(result)-1 {
 			break
@@ -100,6 +101,10 @@ type sByteBuffer struct {
 	next    ByteBuffer
 	index   uint8
 	sumSize uint64
+}
+
+func (s *sByteBuffer) Size() uint64 {
+	return s.sumSize
 }
 
 func (s *sByteBuffer) addLast(buffer ByteBuffer) ByteBuffer {
@@ -124,13 +129,13 @@ func (s *standAllocator) Init(i uint64) error {
 	s.max = MinBlock<<s.psize - 1
 	s.divs = make([]divide, s.psize)
 	s.w.Add(int(s.psize))
-	for _, v := range s.divs {
-		go func(vl *divide) {
-			vl.Init(s, s.psize, uint8(i))
+	for i := range s.divs {
+		go func(vl *divide, index int) {
+			vl.Init(s, s.psize, uint8(index))
 			// at init process, don't need create threads.
 			vl.backAlloc(false)
 			s.w.Done()
-		}(&v)
+		}(&s.divs[i], i)
 	}
 	s.w.Wait()
 	return nil
@@ -160,10 +165,12 @@ func (s *standAllocator) PoolSize() uint64 {
 }
 
 func (s *standAllocator) release(b ByteBuffer) {
-	release := b.(*sByteBuffer)
-	for release != nil {
-		go func() { s.divs[release.index].release(release) }()
-		release = release.next.(*sByteBuffer)
+	release := b
+	next := release
+	for next != nil {
+		release = release.(*sByteBuffer).next
+		go func(n *sByteBuffer ) { s.divs[n.index].release(n) }(next.(*sByteBuffer))
+		next = release
 	}
 }
 
@@ -175,6 +182,7 @@ func (s *standAllocator) doAlloc(length uint64) ByteBuffer {
 	for i := len(r) - 2; i >= 0; i-- {
 		l.next = s.divs[r[i]].alloc()
 		l = l.next.(*sByteBuffer)
+		b.sumSize += l.capital
 	}
 	return b
 }
@@ -191,18 +199,45 @@ func (s *standAllocator) AllocSize() uint64 {
 	return val
 }
 
-func (s *sByteBuffer) Read(int) ([]byte, error) {
-	return util.StandRead(0, s.s, s.capital, &s.RP)
+func (s *sByteBuffer) Read(len int) ([]byte, error) {
+	if s.sumSize - s.RP < uint64(len) {
+		return nil,errors.New(util.INDEX_OUTOF_BOUND)
+	}
+	send := make([]byte,len)
+	s.Read0(len,0,send)
+	return send,nil
+}
+
+func (s *sByteBuffer) Read0(len,pos int,send []byte)  {
+	i := pos
+	for ;i<len;i++{
+		if s.RP == s.capital {
+			break
+		}
+		send[i] = util.ReadOne(s.s,&s.RP)
+	}
+	if i < len {
+		s.next.(*sByteBuffer).Read0(len,i,send)
+	}
 }
 
 func (s *sByteBuffer) Write(_b []byte) error {
-	//this is too simple
-	if util.Int2Uint64(len(_b)) < s.capital-s.WP {
-		return util.StandWrite(s.s, s.capital, &s.WP, _b)
+	if s.sumSize - s.WP < uint64(len(_b)) {
+		return errors.New(util.INDEX_OUTOF_BOUND)
 	}
+	s.Write0(_b,0)
 	return nil
-	//
-	//if b.next != nil && util.Int2Uint64(len(_b)) < (b.capital-b.WP)+b.next.Size() {
-	//
-	//}
+}
+
+func (s *sByteBuffer) Write0(_b []byte,position uint64)  {
+	i := position
+	for ;i<uint64(len(_b));i++{
+		if s.WP == s.capital {
+			break
+		}
+		util.WriteOne(s.s,_b[i],&s.WP)
+	}
+	if i != uint64(len(_b))  {
+		s.next.(*sByteBuffer).Write0(_b,i)
+	}
 }
