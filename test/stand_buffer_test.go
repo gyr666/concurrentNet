@@ -7,7 +7,6 @@ import (
 	"gunplan.top/concurrentNet/buffer"
 )
 
-// TestA  Test 必须写，后边的名称随便写
 func TestStandAllocator(t *testing.T) {
 	v := buffer.NewSandBufferAllocator()
 	g := v.Alloc(40)
@@ -18,8 +17,7 @@ func TestStandAllocator(t *testing.T) {
 	b := v.Alloc(41)
 	s := "hello eo the world 1234567898 ===UUUU=== u"
 	for i := 0;i<10 ; i++ {
-		var a =
-			[]byte(s)
+		var a = []byte(s)
 		b.Write(a)
 		bs, _ := b.Read(len(a))
 		EqualString(string(bs),s,"RW Test")

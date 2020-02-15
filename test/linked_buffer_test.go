@@ -7,7 +7,6 @@ import (
 	"gunplan.top/concurrentNet/buffer"
 )
 
-// TestA  Test 必须写，后边的名称随便写
 func TestAllocator(t *testing.T) {
 	v := buffer.NewLikedBufferAllocator()
 	b := v.Alloc(30)

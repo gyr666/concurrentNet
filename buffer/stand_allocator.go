@@ -5,6 +5,7 @@ import (
 	"errors"
 	"gunplan.top/concurrentNet/util"
 	"sync"
+	"time"
 )
 
 const MinBlock = 2
@@ -28,6 +29,7 @@ type divide struct {
 	give  uint64
 	oper  uint64
 	a     Allocator
+	// load is a dynamic value
 	load  uint8
 }
 
@@ -118,12 +120,14 @@ type standAllocator struct {
 	min   uint64
 	psize uint8
 	load  uint8
+	r     bool
 	max   uint64
 	w     sync.WaitGroup
 }
 
 func (s *standAllocator) Init(i uint64) error {
 	// create alloc index
+	s.r = true
 	s.psize = uint8(i)
 	s.min = MinBlock
 	s.max = MinBlock<<s.psize - 1
@@ -137,6 +141,7 @@ func (s *standAllocator) Init(i uint64) error {
 			s.w.Done()
 		}(&s.divs[i], i)
 	}
+	go s.dynamicRegulate()
 	s.w.Wait()
 	return nil
 }
@@ -150,6 +155,7 @@ func (s *standAllocator) OperatorTimes() uint64 {
 }
 
 func (s *standAllocator) Destroy() error {
+	s.r = false
 	return nil
 }
 
@@ -197,6 +203,26 @@ func (s *standAllocator) AllocSize() uint64 {
 		val += v.give
 	}
 	return val
+}
+
+func (s *standAllocator) dynamicRegulate() {
+	c := util.NewCounter()
+	c.Boot()
+	for ;s.r; {
+		for i := 0; i< len(s.divs); i++  {
+			c.Push(s.divs[i].oper)
+		}
+		time.Sleep(2000)
+		ave := c.Ave()
+		for i := 0; i< len(s.divs); i++  {
+			if s.divs[i].oper <= ave {
+				s.divs[i].load--
+			} else {
+				s.divs[i].load++
+			}
+		}
+		c.Reset()
+	}
 }
 
 func (s *sByteBuffer) Read(len int) ([]byte, error) {
