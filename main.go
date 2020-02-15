@@ -9,6 +9,8 @@ import (
 	"gunplan.top/concurrentNet/core"
 )
 
+
+
 func main() {
 	server := core.NewConcurrentNet()
 	server.OnChannelConnect(func(c core.Channel, p core.Pipeline) {
@@ -17,9 +19,7 @@ func main() {
 		})
 	}).
 		SetServerSocketChannel(core.Factory.NewParentChannelInstance()).
-		Option(&core.BackLog{}, 1024).
-		Option(&core.BufferLength{}, 2020).
-		Option(&core.NetWorkType{}, core.TCP).
+		Option(&config.GetFromDefaultStrategy{}).
 		AddListen(&core.NetworkInet64{Port: 7788}).
 		WaitType(config.ASYNC)
 	sc := make(chan os.Signal, 1)

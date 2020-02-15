@@ -1,11 +1,12 @@
 # ConcurrentNet
-a network platform to support high concurrent  
-Developor  : @gyr666 @H00001(frank)  
-Language   : Golang, gnuc17  
-Run-On	   : Gnu Linux, OS x  
-Lversion   : 0.0.0.1
-License    : GUN GENERAL PUBLIC LICENSE 3.0  
-Webset     : ?
+a network platform to support high concurrent 
+##Information
+Developer   : [**@gyr666**](https://github.com/gry666) [@H00001(frank)](https://github.com/H00001)  
+Language    : Golang 1.13.5, gnuc17  
+Environment : Gnu Linux, OS x. not Windows  
+Version     : 0.0.0.1  
+License     : GUN GENERAL PUBLIC LICENSE 3.0  
+Website     : ?
 
 # GET START
 ### Test
