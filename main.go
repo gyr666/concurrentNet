@@ -1,6 +1,7 @@
 package main
 
 import (
+	"gunplan.top/concurrentNet/config"
 	"os"
 	"os/signal"
 	"syscall"
@@ -20,7 +21,7 @@ func main() {
 		Option(&core.BufferLength{}, 2020).
 		Option(&core.NetWorkType{}, core.TCP).
 		AddListen(&core.NetworkInet64{Port: 7788}).
-		Wtype(core.ASYNC)
+		WaitType(config.ASYNC)
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc,
 		syscall.SIGINT,
