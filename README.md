@@ -1,6 +1,6 @@
 # ConcurrentNet
 a network platform to support high concurrent 
-##Information
+## Information
 Developer   : [**@gyr666**](https://github.com/gry666) [@H00001(frank)](https://github.com/H00001)  
 Language    : Golang 1.13.5, gnuc17  
 Environment : Gnu Linux, OS x. not Windows  
