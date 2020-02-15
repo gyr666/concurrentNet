@@ -12,14 +12,16 @@ type childChannelImpl struct {
 	cache chan buffer.ByteBuffer
 }
 
-func (c *childChannelImpl) readEvent(b buffer.ByteBuffer){
+func (c *childChannelImpl) readEvent(){
 	c.pool.Execwp(func(i ...interface{}) {
-		(i[1]).(chan buffer.ByteBuffer) <- c.l.doPipeline(i[0].(buffer.ByteBuffer))
-	},b,c.cache)
+		(i[0]).(chan buffer.ByteBuffer) <- c.l.doPipeline((c.Read()))
+	},c.cache)
 }
 
-func (c *childChannelImpl) writeEvent() buffer.ByteBuffer{
-	return <- c.cache
+func (c *childChannelImpl) writeEvent() {
+	for ;len(c.cache)!=0; {
+		c.Write(<-c.cache)
+	}
 }
 
 func (c *childChannelImpl) closeEvent(){
@@ -32,4 +34,29 @@ func (c *childChannelImpl) exception(t Throwable){
 	} else {
 		c.l.doException(t,c)
 	}
+}
+
+func (c *channelImpl) Write(buffer.ByteBuffer) {
+	// block write is ok!
+	//TODO
+	//@gyr666 to implement
+}
+
+func (c *channelImpl) Read() buffer.ByteBuffer {
+	// block read is ok!
+	//TODO
+	//@gyr666 to implement
+	return nil
+}
+
+func (c *channelImpl) Close() error {
+	//TODO
+	//@gyr666 to implement
+	return nil
+}
+
+func (c *channelImpl) Reset() error {
+	//TODO
+	//@gyr666 to implement
+	return nil
 }
