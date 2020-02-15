@@ -5,20 +5,20 @@ import (
 	"time"
 )
 
-type FutureImpl struct {
+type futureImpl struct {
 	wait *chan interface{}
 }
 
-func (f *FutureImpl) Get() interface{} {
+func (f *futureImpl) Get() interface{} {
 	return <-*f.wait
 }
 
-func (f *FutureImpl) isDone() bool {
+func (f *futureImpl) isDone() bool {
 	return len(*f.wait) == 1
 }
 
 func newFuture(c *chan interface{}) Future {
-	return &FutureImpl{wait: c}
+	return &futureImpl{wait: c}
 }
 
 func NewThreadPool(core, ext int, span time.Duration, w uint64, strategy func(interface{})) ThreadPool {
