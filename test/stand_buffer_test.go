@@ -15,23 +15,17 @@ func TestStandAllocator(t *testing.T) {
 	for i := 0; i < 40; i++ {
 		Equal(v.Alloc(17).Size(), 18, "Size Test")
 	}
-	b := v.Alloc(32)
-	t.Logf("Size:%d", b.Size())
-	b.Release()
-	b = v.Alloc(30)
-	t.Logf("Size:%d", b.Size())
-	b.Release()
-	b = v.Alloc(30)
-	t.Logf("Size:%d", b.Size())
-	b.Release()
-	b = v.Alloc(30)
-	t.Logf("Size:%d", b.Size())
-	var a = []byte("hello")
-	b.Write(a)
-	bs, err := b.Read(len(a))
-	if err == nil {
-		fmt.Println(string(bs))
+	b := v.Alloc(41)
+	s := "hello eo the world 1234567898 ===UUUU=== u"
+	for i := 0;i<10 ; i++ {
+		var a =
+			[]byte(s)
+		b.Write(a)
+		bs, _ := b.Read(len(a))
+		EqualString(string(bs),s,"RW Test")
+		b.Reset()
 	}
+
 	b.Release()
 	fmt.Printf("operator time : %d\n", v.OperatorTimes())
 	fmt.Printf("operator size : %d\n", v.AllocSize())

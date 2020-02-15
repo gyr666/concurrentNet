@@ -2,4 +2,4 @@ package coder
 
 import "gunplan.top/concurrentNet/buffer"
 
-type encode func(interface{}) buffer.ByteBuffer
+type Encode func(i interface{},b buffer.ByteBuffer) error

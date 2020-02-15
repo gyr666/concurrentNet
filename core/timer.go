@@ -1,6 +1,6 @@
 package core
 
-type TimeTigger interface {
-	Intervale() uint
+type TimeTrigger interface {
+	Interval() uint
 	next() bool
 }
