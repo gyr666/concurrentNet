@@ -6,8 +6,10 @@ type OptionType interface {
 
 type BackLog struct {
 }
+
 type BufferLength struct {
 }
+
 type NetWorkType struct {
 }
 type StreamType struct {

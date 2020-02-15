@@ -1,11 +1,5 @@
 package core
 
-type WaitType uint8
-
-const (
-	SYNC  WaitType = 1
-	ASYNC WaitType = 1 << 1
-)
 
 type ConnectStatus uint8
 
@@ -16,14 +10,6 @@ const (
 	WARN0  ConnectStatus = 1 << 3
 	WARN1  ConnectStatus = 1 << 4
 	WARN2  ConnectStatus = 1 << 5
-)
-
-type NetworkType uint8
-
-const (
-	TCP NetworkType = 1
-	UDP NetworkType = 1 << 1
-	RAW NetworkType = 1 << 2
 )
 
 type ChannelType uint8

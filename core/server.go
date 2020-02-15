@@ -1,13 +1,15 @@
 package core
 
+import "gunplan.top/concurrentNet/config"
+
 type ChannelInCallback func(c Channel, p Pipeline)
 
 type Server interface {
 	OnChannelConnect(ChannelInCallback) Server
 	SetServerSocketChannel(ParentChannel) Server
-	Option(OptionType, interface{}) Server
+	Option(config.ConfigStrategy) Server
 	AddListen(*NetworkInet64) Server
-	Wtype(WaitType) Server
+	WaitType(config.WaitType) Server
 	RegObserve(ServerObserve) Server
 	Stop()
 	Sync() uint8
@@ -18,7 +20,7 @@ type ServerImpl struct {
 	u chan uint8
 	c ChannelInCallback
 	i ParentChannel
-	t WaitType
+	cfj config.Config
 	n []NetworkInet64
 	o ServerObserve
 	s bool
@@ -46,8 +48,9 @@ func (s *ServerImpl) SetServerSocketChannel(i ParentChannel) Server {
 	return s
 }
 
-func (s *ServerImpl) Option(o OptionType, i interface{}) Server {
-	_ = o.doSet(i)
+func (s *ServerImpl) Option(strategy config.ConfigStrategy) Server {
+	s.cfj = config.Config{}
+	strategy.Fill(&s.cfj)
 	return s
 }
 
@@ -59,8 +62,8 @@ func (s *ServerImpl) AddListen(n *NetworkInet64) Server {
 	return s
 }
 
-func (s *ServerImpl) Wtype(w WaitType) Server {
-	s.t = w
+func (s *ServerImpl) WaitType(w config.WaitType) Server {
+	s.cfj.WaitType = w
 	return s
 }
 

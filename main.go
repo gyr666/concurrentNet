@@ -1,12 +1,15 @@
 package main
 
 import (
+	"gunplan.top/concurrentNet/config"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"gunplan.top/concurrentNet/core"
 )
+
+
 
 func main() {
 	server := core.NewConcurrentNet()
@@ -16,11 +19,9 @@ func main() {
 		})
 	}).
 		SetServerSocketChannel(core.Factory.NewParentChannelInstance()).
-		Option(&core.BackLog{}, 1024).
-		Option(&core.BufferLength{}, 2020).
-		Option(&core.NetWorkType{}, core.TCP).
+		Option(&config.GetFromDefaultStrategy{}).
 		AddListen(&core.NetworkInet64{Port: 7788}).
-		Wtype(core.ASYNC)
+		WaitType(config.ASYNC)
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc,
 		syscall.SIGINT,
