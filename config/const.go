@@ -8,6 +8,8 @@ const (
 	TCP NetworkType = 1
 	UDP NetworkType = 1 << 1
 	RAW NetworkType = 1 << 2
+	RTP NetworkType = 1 << 3
+	RTCP NetworkType = 1 << 4
 )
 
 type WaitType uint8
