@@ -3,9 +3,10 @@ package buffer
 
 import (
 	"errors"
-	"gunplan.top/concurrentNet/util"
 	"sync"
 	"time"
+
+	"gunplan.top/concurrentNet/util"
 )
 
 const MinBlock = 2
@@ -30,7 +31,7 @@ type divide struct {
 	oper  uint64
 	a     Allocator
 	// load is a dynamic value
-	load  uint8
+	load uint8
 }
 
 func (d *divide) Init(a Allocator, load uint8, index uint8) {
@@ -175,7 +176,7 @@ func (s *standAllocator) release(b ByteBuffer) {
 	next := release
 	for next != nil {
 		release = release.(*sByteBuffer).next
-		go func(n *sByteBuffer ) { s.divs[n.index].release(n) }(next.(*sByteBuffer))
+		go func(n *sByteBuffer) { s.divs[n.index].release(n) }(next.(*sByteBuffer))
 		next = release
 	}
 }
@@ -208,13 +209,13 @@ func (s *standAllocator) AllocSize() uint64 {
 func (s *standAllocator) dynamicRegulate() {
 	c := util.NewCounter()
 	c.Boot()
-	for ;s.r; {
-		for i := 0; i< len(s.divs); i++  {
+	for s.r {
+		for i := 0; i < len(s.divs); i++ {
 			c.Push(s.divs[i].oper)
 		}
 		time.Sleep(2000)
 		ave := c.Ave()
-		for i := 0; i< len(s.divs); i++  {
+		for i := 0; i < len(s.divs); i++ {
 			if s.divs[i].oper <= ave {
 				s.divs[i].load--
 			} else {
@@ -226,44 +227,44 @@ func (s *standAllocator) dynamicRegulate() {
 }
 
 func (s *sByteBuffer) Read(len int) ([]byte, error) {
-	if s.sumSize - s.RP < uint64(len) {
-		return nil,errors.New(util.INDEX_OUTOF_BOUND)
+	if s.sumSize-s.RP < uint64(len) {
+		return nil, errors.New(util.INDEX_OUTOF_BOUND)
 	}
-	send := make([]byte,len)
-	s.Read0(len,0,send)
-	return send,nil
+	send := make([]byte, len)
+	s.Read0(len, 0, send)
+	return send, nil
 }
 
-func (s *sByteBuffer) Read0(len,pos int,send []byte)  {
+func (s *sByteBuffer) Read0(len, pos int, send []byte) {
 	i := pos
-	for ;i<len;i++{
+	for ; i < len; i++ {
 		if s.RP == s.capital {
 			break
 		}
-		send[i] = util.ReadOne(s.s,&s.RP)
+		send[i] = util.ReadOne(s.s, &s.RP)
 	}
 	if i < len {
-		s.next.(*sByteBuffer).Read0(len,i,send)
+		s.next.(*sByteBuffer).Read0(len, i, send)
 	}
 }
 
 func (s *sByteBuffer) Write(_b []byte) error {
-	if s.sumSize - s.WP < uint64(len(_b)) {
+	if s.sumSize-s.WP < uint64(len(_b)) {
 		return errors.New(util.INDEX_OUTOF_BOUND)
 	}
-	s.Write0(_b,0)
+	s.Write0(_b, 0)
 	return nil
 }
 
-func (s *sByteBuffer) Write0(_b []byte,position uint64)  {
+func (s *sByteBuffer) Write0(_b []byte, position uint64) {
 	i := position
-	for ;i<uint64(len(_b));i++{
+	for ; i < uint64(len(_b)); i++ {
 		if s.WP == s.capital {
 			break
 		}
-		util.WriteOne(s.s,_b[i],&s.WP)
+		util.WriteOne(s.s, _b[i], &s.WP)
 	}
-	if i != uint64(len(_b))  {
-		s.next.(*sByteBuffer).Write0(_b,i)
+	if i != uint64(len(_b)) {
+		s.next.(*sByteBuffer).Write0(_b, i)
 	}
 }

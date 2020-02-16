@@ -65,14 +65,14 @@ func (c *counterImpl) Sum() uint64 {
 	return c.sum0
 }
 
-func (c *counterImpl) Reset()  {
+func (c *counterImpl) Reset() {
 	c.use = 0
 	c.ave0 = 0
 	c.sum0 = 0
 	c.max0 = 0
 	c.min0 = 0
 	close(c.channel)
-	c.channel = make(chan uint64,200)
+	c.channel = make(chan uint64, 200)
 }
 func (c *counterImpl) Boot() {
 	c.init()
@@ -97,4 +97,3 @@ func (c *counterImpl) Boot() {
 		}
 	}()
 }
-

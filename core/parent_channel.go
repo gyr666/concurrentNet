@@ -8,7 +8,6 @@ type parentChannelImpl struct {
 	channelImpl
 }
 
-
 func (p *parentChannelImpl) Listen(*NetworkInet64) {
 
 }

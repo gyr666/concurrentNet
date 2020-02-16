@@ -17,13 +17,13 @@ type Server interface {
 }
 
 type ServerImpl struct {
-	u chan uint8
-	c ChannelInCallback
-	i ParentChannel
+	u   chan uint8
+	c   ChannelInCallback
+	i   ParentChannel
 	cfj config.Config
-	n []NetworkInet64
-	o ServerObserve
-	s bool
+	n   []NetworkInet64
+	o   ServerObserve
+	s   bool
 }
 
 func (s *ServerImpl) Init() Server {

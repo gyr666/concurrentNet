@@ -1,13 +1,13 @@
 package main
 
 import (
-	"gunplan.top/concurrentNet/config"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"gunplan.top/concurrentNet/config"
 	"gunplan.top/concurrentNet/core"
 )
-
 
 func main() {
 	server := core.NewConcurrentNet()

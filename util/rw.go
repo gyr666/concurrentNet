@@ -22,13 +22,13 @@ func StandWrite(des []byte, capital uint64, WP *uint64, _b []byte) error {
 	return nil
 }
 
-func ReadOne(s []byte ,RP *uint64) byte {
-	 v:= s[*RP]
-	 *RP += 1
-	 return v
+func ReadOne(s []byte, RP *uint64) byte {
+	v := s[*RP]
+	*RP += 1
+	return v
 }
 
-func WriteOne(s []byte,b byte ,WP *uint64)  {
+func WriteOne(s []byte, b byte, WP *uint64) {
 	s[*WP] = b
 	*WP += 1
 }

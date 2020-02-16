@@ -1,5 +1,5 @@
 package config
 
 type ConfigStrategy interface {
-	Fill( *Config) error
+	Fill(*Config) error
 }
