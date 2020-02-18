@@ -11,6 +11,7 @@ type parentChannelImpl struct {
 func (p *parentChannelImpl) Listen(*NetworkInet64) {
 
 }
-func (c *childChannelImpl) loop(byteBuffer buffer.ByteBuffer) {
+
+func (c *parentChannelImpl) loop(byteBuffer buffer.ByteBuffer) {
 
 }
