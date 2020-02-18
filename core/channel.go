@@ -64,6 +64,3 @@ func (c *channelImpl) Type() ChannelType {
 func (c *channelImpl) parent() Channel {
 	return c.p
 }
-
-
-

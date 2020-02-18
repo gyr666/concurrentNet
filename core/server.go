@@ -17,18 +17,17 @@ type Server interface {
 }
 
 type ServerImpl struct {
-	u chan uint8
-	c ChannelInCallback
-	i ParentChannel
+	u   chan uint8
+	c   ChannelInCallback
+	i   ParentChannel
 	cfj config.Config
-	n []NetworkInet64
-	o ServerObserve
-	s bool
+	n   []NetworkInet64
+	o   ServerObserve
+	s   bool
 }
 
 func (s *ServerImpl) Init() Server {
 	s.u = make(chan uint8, 1)
-	s.n = make([]NetworkInet64, 1)
 	s.o = &DefaultObserve{}
 	return s
 }
@@ -58,6 +57,7 @@ func (s *ServerImpl) AddListen(n *NetworkInet64) Server {
 	if s.i == nil {
 		panic("please set parent channel")
 	}
+	s.n = append(s.n, *n)
 	s.i.Listen(n)
 	return s
 }

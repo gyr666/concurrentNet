@@ -7,32 +7,32 @@ import (
 
 type childChannelImpl struct {
 	channelImpl
-	l Pipeline
-	pool threading.ThreadPool
+	l     Pipeline
+	pool  threading.ThreadPool
 	cache chan buffer.ByteBuffer
 }
 
-func (c *childChannelImpl) readEvent(){
+func (c *childChannelImpl) readEvent() {
 	c.pool.Execwp(func(i ...interface{}) {
 		(i[0]).(chan buffer.ByteBuffer) <- c.l.doPipeline((c.Read()))
-	},c.cache)
+	}, c.cache)
 }
 
 func (c *childChannelImpl) writeEvent() {
-	for ;len(c.cache)!=0; {
+	for len(c.cache) != 0 {
 		c.Write(<-c.cache)
 	}
 }
 
-func (c *childChannelImpl) closeEvent(){
+func (c *childChannelImpl) closeEvent() {
 	_ = c.Close()
 }
 
-func (c *childChannelImpl) exception(t Throwable){
+func (c *childChannelImpl) exception(t Throwable) {
 	if !t.isUserDefine() {
 		c.closeEvent()
 	} else {
-		c.l.doException(t,c)
+		c.l.doException(t, c)
 	}
 }
 

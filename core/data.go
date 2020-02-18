@@ -14,36 +14,36 @@ type Data interface {
 }
 
 type dataImpl struct {
-	data interface{}
+	data  interface{}
 	event chan TransferEvent
 	throw *Throwable
-	c ChildChannel
+	c     ChildChannel
 }
 
-func  (d *dataImpl) Channel() ChildChannel{
+func (d *dataImpl) Channel() ChildChannel {
 	return d.c
 }
 
-func  (d *dataImpl) ConsumeEvent() TransferEvent{
+func (d *dataImpl) ConsumeEvent() TransferEvent {
 	return d.event
 }
 
-func (d *dataImpl) ProduceEvent(t TransferEvent){
+func (d *dataImpl) ProduceEvent(t TransferEvent) {
 	d.event <- t
 }
 
-func (d *dataImpl) GetThrow() *Throwable{
+func (d *dataImpl) GetThrow() *Throwable {
 	return d.throw
 }
 
-func (d *dataImpl) SetThrow(t *Throwable){
+func (d *dataImpl) SetThrow(t *Throwable) {
 	d.throw = t
 }
 
-func (d *dataImpl) GetData() interface{}{
+func (d *dataImpl) GetData() interface{} {
 	return d.data
 }
 
-func (d *dataImpl) SetData(data interface{}){
+func (d *dataImpl) SetData(data interface{}) {
 	d.data = data
 }

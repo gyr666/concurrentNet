@@ -1,5 +1,5 @@
 package threading
 
-func CreateNewThreadPool() ThreadPool{
+func CreateNewThreadPool() ThreadPool {
 	return &threadPoolImpl{}
 }

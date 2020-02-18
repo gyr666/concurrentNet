@@ -1,6 +1,5 @@
 package core
 
-
 type ConnectStatus uint8
 
 const (
