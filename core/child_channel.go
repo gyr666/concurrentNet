@@ -10,22 +10,37 @@ type childChannelImpl struct {
 	l     Pipeline
 	pool  threading.ThreadPool
 	cache chan buffer.ByteBuffer
+	call  CallBackEvent
 }
 
 func (c *childChannelImpl) readEvent() {
 	c.pool.Execwp(func(i ...interface{}) {
-		(i[0]).(chan buffer.ByteBuffer) <- c.l.doPipeline((c.Read()))
+		b, err := c.Read()
+		if err != nil {
+			c.call.ChannelPreReadException(c.id, err)
+		}
+		(i[0]).(chan buffer.ByteBuffer) <- c.l.doPipeline(b)
+		c.call.ChannelReadEventComplete(c.id)
 	}, c.cache)
+	c.call.ChannelReadEventAsyncExecuteComplete(c.id)
 }
 
 func (c *childChannelImpl) writeEvent() {
-	for len(c.cache) != 0 {
-		c.Write(<-c.cache)
-	}
+	c.pool.Execwp(func(i ...interface{}) {
+		for len(c.cache) != 0 {
+			if err := c.Write(<-c.cache); err != nil {
+				i[0].(CallBackEvent).ChannelPreWriteException(c.id, err)
+				return
+			}
+		}
+		i[0].(CallBackEvent).ChannelWriteEventComplete(c.id)
+	}, c.call)
+	c.call.ChannelWriteEventAsyncExecuteComplete(c.id)
 }
 
 func (c *childChannelImpl) closeEvent() {
-	_ = c.Close()
+	err := c.Close()
+	c.call.ChannelOperatorException(c.id, err)
 }
 
 func (c *childChannelImpl) exception(t Throwable) {
@@ -36,27 +51,28 @@ func (c *childChannelImpl) exception(t Throwable) {
 	}
 }
 
-func (c *channelImpl) Write(buffer.ByteBuffer) {
+func (c *childChannelImpl) Write(buffer.ByteBuffer) error {
 	// block write is ok!
 	//TODO
 	//@gyr666 to implement
+	return nil
 }
 
-func (c *channelImpl) Read() buffer.ByteBuffer {
+func (c *childChannelImpl) Read() (buffer.ByteBuffer, error) {
 	// block read is ok!
 	//TODO
 	//@gyr666 to implement
-	return nil
+	return nil, nil
 }
 
-func (c *channelImpl) Close() error {
+func (c *childChannelImpl) Close() error {
 	//TODO
 	//@gyr666 to implement
 	return nil
 }
 
-func (c *channelImpl) Reset() error {
+func (c *childChannelImpl) Reset() {
 	//TODO
 	//@gyr666 to implement
-	return nil
+	c.call.ChannelPeerReset(c.id)
 }

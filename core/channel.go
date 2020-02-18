@@ -5,11 +5,12 @@ import (
 )
 
 type Channel interface {
+	Id() uint64
 	Address() NetworkInet64
 	Status() ConnectStatus
 	AddTrigger(TimeTrigger)
 	Type() ChannelType
-	parent() Channel
+	Parent() Channel
 }
 
 type ParentChannel interface {
@@ -28,10 +29,10 @@ type Event interface {
 type ChildChannel interface {
 	Channel
 	Event
-	Write(buffer.ByteBuffer)
-	Read() buffer.ByteBuffer
+	Write(buffer.ByteBuffer) error
+	Read() (buffer.ByteBuffer, error)
 	Close() error
-	Reset() error
+	Reset()
 }
 
 type channelImpl struct {
@@ -61,6 +62,10 @@ func (c *channelImpl) Type() ChannelType {
 	return c.channelType
 }
 
-func (c *channelImpl) parent() Channel {
+func (c *channelImpl) Parent() Channel {
 	return c.p
+}
+
+func (c *channelImpl) Id() uint64 {
+	return c.id
 }
