@@ -17,7 +17,7 @@ func (d *DefaultObserve) OnBooting() {
 }
 
 func (d *DefaultObserve) OnBooted(l []NetworkInet64) {
-	fmt.Printf("On Booted %#v", l)
+	fmt.Printf("On Booted \nlisten:%#v\n", l)
 }
 
 func (d *DefaultObserve) OnStopping() {
