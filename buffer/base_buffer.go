@@ -86,3 +86,7 @@ func (b *BaseByteBuffer) Reset() {
 	b.WP = 0
 	b.RP = 0
 }
+
+func (b *BaseByteBuffer) SetAlloc(i interface{}) {
+	b.a = i.(Allocator)
+}

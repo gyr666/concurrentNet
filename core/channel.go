@@ -78,3 +78,7 @@ func (c *channelImpl) Release() {
 
 func (c *channelImpl) Reset() {
 }
+
+func (c *channelImpl) SetAlloc(a interface{}) {
+	c.cc = a.(ChannelCache)
+}
