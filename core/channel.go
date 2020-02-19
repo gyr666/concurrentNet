@@ -11,6 +11,8 @@ type Channel interface {
 	AddTrigger(TimeTrigger)
 	Type() ChannelType
 	Parent() Channel
+	Release()
+	Reset() Channel
 }
 
 type ParentChannel interface {
@@ -32,7 +34,7 @@ type ChildChannel interface {
 	Write(buffer.ByteBuffer) error
 	Read() (buffer.ByteBuffer, error)
 	Close() error
-	Reset()
+	NetReset()
 }
 
 type channelImpl struct {
@@ -43,6 +45,7 @@ type channelImpl struct {
 	channelType ChannelType
 	Triggers    []TimeTrigger
 	a           buffer.Allocator
+	cc          ChannelCache
 	fd          int
 }
 
@@ -68,4 +71,12 @@ func (c *channelImpl) Parent() Channel {
 
 func (c *channelImpl) Id() uint64 {
 	return c.id
+}
+
+func (c *channelImpl) Release() {
+	c.cc.release(c)
+}
+
+func (c *channelImpl) Reset() Channel {
+	return c
 }

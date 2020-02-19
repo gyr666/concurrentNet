@@ -8,11 +8,13 @@ func NewConcurrentNet() Server {
 }
 
 type ChannelFactory struct {
+	cache ChannelCache
 }
 
 func (c *ChannelFactory) NewChildChannelInstance() ChildChannel {
-	return &childChannelImpl{}
+	return c.cache.Acquire(Child).(ChildChannel)
 }
+
 func (c *ChannelFactory) NewParentChannelInstance() ParentChannel {
-	return &parentChannelImpl{}
+	return c.cache.Acquire(Child).(ParentChannel)
 }

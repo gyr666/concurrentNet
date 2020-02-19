@@ -86,7 +86,7 @@ func (c *childChannelImpl) Close() error {
 	return nil
 }
 
-func (c *childChannelImpl) Reset() {
+func (c *childChannelImpl) NetReset() {
 	//TODO
 	//@gyr666 to implement
 	c.call.ChannelPeerReset(c.id)
