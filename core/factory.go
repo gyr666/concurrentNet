@@ -12,7 +12,10 @@ type ChannelFactory struct {
 }
 
 func (c *ChannelFactory) NewChildChannelInstance() ChildChannel {
-	return c.cache.Acquire(Child).(ChildChannel)
+	if c.cache != nil {
+		return c.cache.Acquire(Child).(ChildChannel)
+	}
+	return &childChannelImpl{}
 }
 
 func (c *ChannelFactory) NewParentChannelInstance() ParentChannel {
