@@ -30,8 +30,7 @@ type Allocator interface {
 type ByteBuffer interface {
 	ByteBufferDevelop
 	IOer
-	Release()
-	Reset()
+	Cached
 	Size() uint64
 	convert()
 	Mode() OperatorMode

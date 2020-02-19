@@ -35,8 +35,8 @@ func (c *channelCacheImpl) createList(channelType ChannelType) *LinkedChannel {
 
 func (c *channelCacheImpl) head(ct ChannelType) Channel {
 	var lc = c.findList(ct)
-	v := lc
-	lc = v.next
+	v := *lc
+	(*lc) = v.next
 	return v.c
 }
 
@@ -45,15 +45,16 @@ func (c *channelCacheImpl) Acquire(ct ChannelType) Channel {
 }
 
 func (c *channelCacheImpl) release(ch Channel) {
+	ch.Reset()
 	lc := c.findList(ch.Type())
-	v := lc
-	lc = &LinkedChannel{c: ch.Reset()}
-	lc.next = v
+	v := *lc
+	*lc = &LinkedChannel{c: ch}
+	(*lc).next = v
 }
 
-func (c *channelCacheImpl) findList(t ChannelType) *LinkedChannel {
+func (c *channelCacheImpl) findList(t ChannelType) **LinkedChannel {
 	if t == Child {
-		return c.c
+		return &c.c
 	}
-	return c.p
+	return &c.p
 }

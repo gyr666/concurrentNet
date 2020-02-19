@@ -11,8 +11,7 @@ type Channel interface {
 	AddTrigger(TimeTrigger)
 	Type() ChannelType
 	Parent() Channel
-	Release()
-	Reset() Channel
+	buffer.Cached
 }
 
 type ParentChannel interface {
@@ -77,6 +76,5 @@ func (c *channelImpl) Release() {
 	c.cc.release(c)
 }
 
-func (c *channelImpl) Reset() Channel {
-	return c
+func (c *channelImpl) Reset() {
 }
