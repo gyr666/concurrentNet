@@ -5,5 +5,3 @@ type Loop interface {
 	stop()
 	eventHandler()
 }
-
-
