@@ -2,6 +2,7 @@ package core
 
 import (
 	"gunplan.top/concurrentNet/config"
+	"log"
 	"runtime"
 	"sync"
 )
@@ -30,6 +31,7 @@ type ServerImpl struct {
 	s   bool
 	lg  subLoopGroup
 	wg  sync.WaitGroup
+	once sync.Once
 }
 
 func (s *ServerImpl) Init() Server {
@@ -85,6 +87,12 @@ func (s *ServerImpl) Join() {
 
 func (s *ServerImpl) Sync() uint8 {
 	s.o.OnBooting()
+	if err:=s.startLoops();err != nil{
+		log.Println(err)
+		s.closeLoops()
+		return -1
+	}
+
 	//todo use callback
 	if s.s {
 		s.o.OnBooted(s.n)
@@ -95,27 +103,23 @@ func (s *ServerImpl) Sync() uint8 {
 }
 
 func (s *ServerImpl) startLoops() error {
-	var lps []Loop
 	cpuNum := runtime.NumCPU()
 	for i := 0; i < cpuNum; i++ {
 		slp, err := NewSubLoop()
 		if err != nil {
 			return err
 		}
-		lps = append(lps, slp)
+		s.lg.registe(slp)
 	}
+
 	mlp, err := NewMainLoop()
 	if err != nil {
 		return err
 	}
-	lps = append(lps, mlp)
+	s.lg.registe(mlp)
 
-	//To make mlp at the first of the loopGroup , when use iterate close loops , will close mlp first
-	for i := len(lps) - 1; i >= 0; i-- {
-		s.lg.registe(lps[i])
-	}
-
-	s.lg.iterate(func(lp Loop) bool {
+	//note:mainLoop is at the last of the loopGroup
+	s.lg.iterate(false,func(lp Loop) bool{
 		s.wg.Add(1)
 		go func() {
 			lp.start()
@@ -124,4 +128,12 @@ func (s *ServerImpl) startLoops() error {
 		return true
 	})
 	return nil
+}
+
+func (s *ServerImpl) closeLoops() {
+	//note:mainLoop is at the last of the loopGroup , we should close it first
+	s.lg.iterate(true,func(lp Loop) bool {
+		lp.stop()
+		return true
+	})
 }

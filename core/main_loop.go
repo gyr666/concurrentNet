@@ -19,14 +19,14 @@ func NewMainLoop() (*mainLoop, error) {
 	return slp, nil
 }
 
-func (mp *mainLoop) start() {
+func (mlp *mainLoop) start() {
 
 }
 
-func (mp *mainLoop) stop() {
-
+func (mlp *mainLoop) stop() {
+	mlp.poller.Close()
 }
 
-func (mp *mainLoop) eventHandler() {
+func (mlp *mainLoop) eventHandler() {
 
 }

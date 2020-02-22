@@ -26,7 +26,7 @@ func (slp *subLoop) start() {
 }
 
 func (slp *subLoop) stop() {
-
+	slp.poller.Close()
 }
 
 func (slp *subLoop) eventHandler() {

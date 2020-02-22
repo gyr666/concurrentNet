@@ -13,17 +13,19 @@ func (g *subLoopGroup) registe(lp Loop) {
 func (g *subLoopGroup) next() Loop {
 	g.index++
 	size := len(g.loops)
-	if g.index == size {
+	if g.index >= size {
 		g.index -= size
-		//index 0 is mainLoop , so we should start with index 1
-		g.index++
 	}
 	return g.loops[g.index]
 }
 
-func (g *subLoopGroup) iterate(f func(Loop) bool) {
-	for _, lp := range g.loops {
-		if !f(lp) {
+func (g *subLoopGroup) iterate(reverse bool,f func(Loop) bool) {
+	start,end,delta:= 0,len(g.loops)-1,1
+	if reverse {
+		start,end,delta = end,start,-delta
+	}
+	for i:=start;i<=end;i +=delta{
+		if !f(g.loops[i]) {
 			break
 		}
 	}
