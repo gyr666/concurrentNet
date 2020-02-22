@@ -34,9 +34,9 @@ func NewPoller() (*Poller, error) {
 	return p, nil
 }
 
-func(p *Poller)Close(){
-	_ =unix.Close(p.wfd)
-	_= unix.Close(p.pfd)
+func (p *Poller) Close() {
+	_ = unix.Close(p.wfd)
+	_ = unix.Close(p.pfd)
 }
 
 func (p *Poller) Polling(callback func() error) error {

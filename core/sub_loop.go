@@ -5,29 +5,30 @@ import (
 )
 
 type subLoop struct {
-	poller *netpoll.Poller
+	poller   *netpoll.Poller
 	channels map[int]ChildChannel
 }
-func NewSubLoop()(*subLoop,error){
-	poller,err:=netpoll.NewPoller()
-	if err!=nil{
-		return nil,err
+
+func NewSubLoop() (*subLoop, error) {
+	poller, err := netpoll.NewPoller()
+	if err != nil {
+		return nil, err
 	}
-	slp:=&subLoop{
+	slp := &subLoop{
 		poller:   poller,
 		channels: make(map[int]ChildChannel),
 	}
-	return slp,nil
+	return slp, nil
 }
 
-func (slp *subLoop)start(){
-
-}
-
-func (slp *subLoop)stop(){
+func (slp *subLoop) start() {
 
 }
 
-func (slp *subLoop)eventHandler(){
+func (slp *subLoop) stop() {
+
+}
+
+func (slp *subLoop) eventHandler() {
 
 }
