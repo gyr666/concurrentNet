@@ -19,7 +19,7 @@ func TestStandAllocator(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		var a = []byte(s)
 		b.Write(a)
-		bs, _ := b.Read(len(a))
+		bs, _ := b.Read(20)
 		EqualString(string(bs), s, "RW Test")
 		b.Reset()
 	}
