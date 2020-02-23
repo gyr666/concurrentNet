@@ -39,6 +39,9 @@ func (a *allocatorImpl) Destroy() error {
 }
 
 func (a *allocatorImpl) Alloc(length uint64) ByteBuffer {
+	if length == 0 {
+		return nil
+	}
 	a.counter.Push(length)
 	a.l.Lock()
 	defer a.l.Unlock()

@@ -161,7 +161,7 @@ func (s *standAllocator) Destroy() error {
 }
 
 func (s *standAllocator) Alloc(length uint64) ByteBuffer {
-	if length > s.max {
+	if length > s.max || length < 0 {
 		return nil
 	}
 	return s.doAlloc(length)
