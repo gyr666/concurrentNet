@@ -28,5 +28,5 @@ func (g *GetConfigFromFile) FetchToMemory() buffer.ByteBuffer {
 }
 
 func (g *GetConfigFromFile) Decode() ConfigDecoder {
-
+	return nil
 }

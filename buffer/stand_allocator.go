@@ -42,6 +42,11 @@ func (d *divide) Init(a Allocator, load uint8, index uint8) {
 	d.a = a
 }
 
+func (d *divide) Destroy() {
+	d.first = nil
+	// help gc
+}
+
 func (d *divide) alloc() ByteBuffer {
 	d.Lock()
 	d.oper++
@@ -162,6 +167,9 @@ func (s *standAllocator) OperatorTimes() uint64 {
 
 func (s *standAllocator) Destroy() error {
 	s.r = false
+	for i := range s.divs {
+		s.divs[i].Destroy()
+	}
 	return nil
 }
 

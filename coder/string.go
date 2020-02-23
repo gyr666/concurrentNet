@@ -11,6 +11,6 @@ func (s *StringTransfer) encode(i interface{}, b *buffer.ByteBuffer) error {
 }
 
 func (s *StringTransfer) decode(b *buffer.ByteBuffer) interface{} {
-	data, _ := (*b).Read(-1)
+	data, _ := (*b).ReadAll()
 	return string(data)
 }

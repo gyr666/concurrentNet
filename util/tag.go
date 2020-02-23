@@ -9,6 +9,7 @@ func GetFieldsFromTag(i interface{}, tag, tagv string) string {
 			return fields.Field(i).Name
 		}
 	}
+	return ""
 }
 
 func GetFieldsFromNameAndSet(i interface{}, name string, v interface{}) {
