@@ -235,6 +235,10 @@ func (s *sByteBuffer) Read(len int) ([]byte, error) {
 	return send, nil
 }
 
+func (s *sByteBuffer) ReadAll() ([]byte, error) {
+	return nil, nil
+}
+
 func (s *sByteBuffer) Read0(len, pos int, send []byte) {
 	i := pos
 	for ; i < len; i++ {

@@ -61,6 +61,10 @@ func (b *BaseByteBuffer) Read(i uint64) ([]byte, error) {
 	return util.StandRead(i, b.s, b.capital, &b.RP)
 }
 
+func (b *BaseByteBuffer) ReadAll() ([]byte, error) {
+	return util.StandRead(int(b.RP), b.s, b.capital, &b.RP)
+}
+
 func (b *BaseByteBuffer) Write(_b []byte) error {
 	return util.StandWrite(b.s, b.capital, &b.WP, _b)
 }
