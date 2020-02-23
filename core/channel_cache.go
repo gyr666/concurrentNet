@@ -89,6 +89,7 @@ type channelCacheImpl struct {
 
 func (c *channelCacheImpl) Init() ChannelCache {
 	c.parentMeta = channelCacheMeta{t: Parent, load: 200, a: c, index: 0}
+	c.parentMeta.init(Parent, 10, c, 0)
 	c.childMeta = make([]channelCacheMeta, c.childLoad)
 	for i := range c.childMeta {
 		c.childMeta[i].init(Child, 200, c, uint8(i))
