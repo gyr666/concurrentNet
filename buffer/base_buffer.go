@@ -57,7 +57,7 @@ func (b *BaseByteBuffer) Size() uint64 {
 	return b.capital
 }
 
-func (b *BaseByteBuffer) Read(i int) ([]byte, error) {
+func (b *BaseByteBuffer) Read(i uint64) ([]byte, error) {
 	return util.StandRead(i, b.s, b.capital, &b.RP)
 }
 

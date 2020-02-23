@@ -2,13 +2,13 @@ package util
 
 import "errors"
 
-func StandRead(i int, dis []byte, capital uint64, RP *uint64) ([]byte, error) {
-	if Int2Uint64(i) > capital-*RP {
+func StandRead(i uint64, dis []byte, capital uint64, RP *uint64) ([]byte, error) {
+	if i > capital-*RP {
 		return nil, errors.New(INDEX_OUTOF_BOUND)
 	}
 	bt := make([]byte, i)
-	BlockCopy(dis, *RP, bt, 0, Int2Uint64(i))
-	*RP = *RP + Int2Uint64(i)
+	BlockCopy(dis, *RP, bt, 0, i)
+	*RP = *RP + i
 	return bt, nil
 }
 
