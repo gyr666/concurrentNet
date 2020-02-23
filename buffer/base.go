@@ -19,4 +19,5 @@ type Writer interface {
 }
 type Reader interface {
 	Read(int) ([]byte, error)
+	ReadAll() ([]byte, error)
 }
