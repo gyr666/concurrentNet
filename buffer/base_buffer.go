@@ -30,8 +30,7 @@ type Allocator interface {
 type ByteBuffer interface {
 	ByteBufferDevelop
 	IOer
-	Release()
-	Reset()
+	Cached
 	Size() uint64
 	convert()
 	Mode() OperatorMode
@@ -86,4 +85,8 @@ func (b *BaseByteBuffer) Release() {
 func (b *BaseByteBuffer) Reset() {
 	b.WP = 0
 	b.RP = 0
+}
+
+func (b *BaseByteBuffer) SetAlloc(i interface{}) {
+	b.a = i.(Allocator)
 }
