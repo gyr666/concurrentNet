@@ -226,8 +226,8 @@ func (s *standAllocator) dynamicRegulate() {
 	}
 }
 
-func (s *sByteBuffer) Read(len int) ([]byte, error) {
-	if s.sumSize-s.RP < uint64(len) {
+func (s *sByteBuffer) Read(len uint64) ([]byte, error) {
+	if s.sumSize-s.RP < len {
 		return nil, errors.New(util.INDEX_OUTOF_BOUND)
 	}
 	send := make([]byte, len)
@@ -239,7 +239,7 @@ func (s *sByteBuffer) ReadAll() ([]byte, error) {
 	return nil, nil
 }
 
-func (s *sByteBuffer) Read0(len, pos int, send []byte) {
+func (s *sByteBuffer) Read0(len, pos uint64, send []byte) {
 	i := pos
 	for ; i < len; i++ {
 		if s.RP == s.capital {
