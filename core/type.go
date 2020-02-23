@@ -11,6 +11,15 @@ const (
 	WARN2  ConnectStatus = 1 << 5
 )
 
+type ServerStatus uint8
+
+const(
+	BOOTING ServerStatus = iota
+	RUNNING
+	STOPPING
+	STOPPED
+)
+
 type ChannelType uint8
 
 const (

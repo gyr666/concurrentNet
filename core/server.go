@@ -32,6 +32,7 @@ type ServerImpl struct {
 	lg  subLoopGroup
 	wg  sync.WaitGroup
 	once sync.Once
+	status ServerStatus
 }
 
 func (s *ServerImpl) Init() Server {
@@ -62,6 +63,7 @@ func (s *ServerImpl) Option(strategy config.ConfigStrategy) Server {
 }
 
 func (s *ServerImpl) AddListen(n *NetworkInet64) Server {
+	// Todo : check server status, only called when status in [BOOTING,RUNNING]
 	if s.i == nil {
 		panic("please set parent channel")
 	}
@@ -76,36 +78,42 @@ func (s *ServerImpl) WaitType(w config.WaitType) Server {
 }
 
 func (s *ServerImpl) Stop() {
+	s.once.Do(func(){
+		s.u <- 1
+		s.status = STOPPING
+
+	})
 	s.o.OnStopping()
-	s.u <- 1
-	s.o.OnStopped()
 }
 
 func (s *ServerImpl) Join() {
 	<-s.u
+	s.stopLoops()
+	s.wg.Wait()
+	s.closeLoops()
+	s.status = STOPPED
+	s.o.OnStopped()
 }
 
 func (s *ServerImpl) Sync() uint8 {
+	s.status=BOOTING
 	s.o.OnBooting()
 	if err:=s.startLoops();err != nil{
 		log.Println(err)
 		s.closeLoops()
 		return -1
 	}
-
-	//todo use callback
-	if s.s {
-		s.o.OnBooted(s.n)
-		s.Join()
-	}
-	s.o.OnBooted(s.n)
+	s.status=RUNNING
+	s.o.OnRunning(s.n)
+	s.Join()
 	return 0
 }
 
 func (s *ServerImpl) startLoops() error {
+
 	cpuNum := runtime.NumCPU()
 	for i := 0; i < cpuNum; i++ {
-		slp, err := NewSubLoop()
+		slp, err := NewSubLoop(i)
 		if err != nil {
 			return err
 		}
@@ -118,7 +126,7 @@ func (s *ServerImpl) startLoops() error {
 	}
 	s.lg.registe(mlp)
 
-	//note:mainLoop is at the last of the loopGroup
+	//note : mainLoop at the last of the loopGroup
 	s.lg.iterate(false,func(lp Loop) bool{
 		s.wg.Add(1)
 		go func() {
@@ -130,10 +138,18 @@ func (s *ServerImpl) startLoops() error {
 	return nil
 }
 
-func (s *ServerImpl) closeLoops() {
-	//note:mainLoop is at the last of the loopGroup , we should close it first
+func (s *ServerImpl) stopLoops() {
+	//note : mainLoop at the last of the loopGroup , we should stop it first
 	s.lg.iterate(true,func(lp Loop) bool {
 		lp.stop()
+		return true
+	})
+}
+
+func (s *ServerImpl) closeLoops() {
+
+	s.lg.iterate(true,func(lp Loop) bool {
+		lp.close()
 		return true
 	})
 }

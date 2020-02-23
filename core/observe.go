@@ -4,7 +4,7 @@ import "fmt"
 
 type ServerObserve interface {
 	OnBooting()
-	OnBooted(l []NetworkInet64)
+	OnRunning(l []NetworkInet64)
 	OnStopping()
 	OnStopped()
 }
@@ -16,8 +16,8 @@ func (d *DefaultObserve) OnBooting() {
 	fmt.Println("On Booting")
 }
 
-func (d *DefaultObserve) OnBooted(l []NetworkInet64) {
-	fmt.Printf("On Booted \nlisten:%#v\n", l)
+func (d *DefaultObserve) OnRunning(l []NetworkInet64) {
+	fmt.Printf("On Running \nlisten:%#v\n", l)
 }
 
 func (d *DefaultObserve) OnStopping() {

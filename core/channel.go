@@ -17,7 +17,7 @@ type Channel interface {
 type ParentChannel interface {
 	Channel
 	Listen(*NetworkInet64)
-	loop()
+	Close()
 }
 
 type Event interface {
