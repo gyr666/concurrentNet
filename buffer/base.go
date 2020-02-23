@@ -18,6 +18,6 @@ type Writer interface {
 	Write([]byte) error
 }
 type Reader interface {
-	Read(int) ([]byte, error)
+	Read(uint64) ([]byte, error)
 	ReadAll() ([]byte, error)
 }

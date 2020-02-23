@@ -1,6 +1,6 @@
 package core
 
-var Factory = ChannelFactory{}
+var Factory = ChannelFactory{cache: NewChannelCache()}
 
 func NewConcurrentNet() Server {
 	s := ServerImpl{}
@@ -19,5 +19,5 @@ func (c *ChannelFactory) NewChildChannelInstance() ChildChannel {
 }
 
 func (c *ChannelFactory) NewParentChannelInstance() ParentChannel {
-	return c.cache.Acquire(Child).(ParentChannel)
+	return c.cache.Acquire(Parent).(ParentChannel)
 }

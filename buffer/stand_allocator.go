@@ -42,6 +42,11 @@ func (d *divide) Init(a Allocator, load uint8, index uint8) {
 	d.a = a
 }
 
+func (d *divide) Destroy() {
+	d.first = nil
+	// help gc
+}
+
 func (d *divide) alloc() ByteBuffer {
 	d.Lock()
 	d.oper++
@@ -53,7 +58,7 @@ func (d *divide) alloc() ByteBuffer {
 	d.first = v.addLast(nil)
 	// pre allocator
 	if d.first == nil {
-		go d.backAlloc(true)
+		go d.backAlloc()
 	}
 	d.Unlock()
 	return v
@@ -80,23 +85,20 @@ func (d *divide) setLink(sta *sByteBuffer) {
 	d.first = sta
 }
 
-func (d *divide) backAlloc(release bool) {
+func (d *divide) backAlloc() {
 	d.Lock()
 	result := make([]sByteBuffer, d.load)
-	for i := 0; ; i++ {
-		result[i].Init(d.s, d.a)
-		result[i].sumSize += result[i].capital
-		result[i].index = d.index
+	for i := 0; i < len(result); i++ {
+		result[i].init(d.s, d.a, d.index)
 		if i == len(result)-1 {
-			break
+			result[i].next = nil
+		} else {
+			result[i].next = &result[i+1]
 		}
-		result[i].next = &result[i+1]
 	}
 	d.setLink(&result[0])
 	d.Unlock()
-	if release {
-		d.c.Broadcast()
-	}
+	d.c.Broadcast()
 }
 
 type sByteBuffer struct {
@@ -104,6 +106,14 @@ type sByteBuffer struct {
 	next    ByteBuffer
 	index   uint8
 	sumSize uint64
+	active  []bool
+}
+
+func (s *sByteBuffer) init(size uint64, all Allocator, index uint8) {
+	s.BaseByteBuffer.Init(size, all)
+	s.sumSize = size
+	s.active = make([]bool, 2)
+	s.index = index
 }
 
 func (s *sByteBuffer) Size() uint64 {
@@ -138,7 +148,7 @@ func (s *standAllocator) Init(i uint64) error {
 		go func(vl *divide, index int) {
 			vl.Init(s, s.psize, uint8(index))
 			// at init process, don't need create threads.
-			vl.backAlloc(false)
+			vl.backAlloc()
 			s.w.Done()
 		}(&s.divs[i], i)
 	}
@@ -157,6 +167,9 @@ func (s *standAllocator) OperatorTimes() uint64 {
 
 func (s *standAllocator) Destroy() error {
 	s.r = false
+	for i := range s.divs {
+		s.divs[i].Destroy()
+	}
 	return nil
 }
 
@@ -226,8 +239,8 @@ func (s *standAllocator) dynamicRegulate() {
 	}
 }
 
-func (s *sByteBuffer) Read(len int) ([]byte, error) {
-	if s.sumSize-s.RP < uint64(len) {
+func (s *sByteBuffer) Read(len uint64) ([]byte, error) {
+	if s.sumSize-s.RP < len {
 		return nil, errors.New(util.INDEX_OUTOF_BOUND)
 	}
 	send := make([]byte, len)
@@ -239,7 +252,7 @@ func (s *sByteBuffer) ReadAll() ([]byte, error) {
 	return nil, nil
 }
 
-func (s *sByteBuffer) Read0(len, pos int, send []byte) {
+func (s *sByteBuffer) Read0(len, pos uint64, send []byte) {
 	i := pos
 	for ; i < len; i++ {
 		if s.RP == s.capital {

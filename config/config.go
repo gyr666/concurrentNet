@@ -6,13 +6,13 @@ type ConfigStrategy interface {
 	Fill(*Config) error
 }
 
-type ConfigDecorder interface {
+type ConfigDecoder interface {
 	Decode(byteBuffer buffer.ByteBuffer, config *Config)
 }
 
 type ServiceGetter interface {
 	FetchToMemory() buffer.ByteBuffer
-	Decode() ConfigDecorder
+	Decode() ConfigDecoder
 }
 
 type GetConfig struct {
