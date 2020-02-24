@@ -39,6 +39,8 @@ type ByteBuffer interface {
 	Convert()
 	FastMoveOut() []byte
 	Mode() OperatorMode
+	ShiftRN(n uint64) error
+	ShiftWN(n uint64) error
 }
 
 type BaseByteBuffer struct {
