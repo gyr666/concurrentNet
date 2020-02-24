@@ -285,3 +285,28 @@ func (s *sByteBuffer) Write0(_b []byte, position uint64) {
 		s.next.(*sByteBuffer).Write0(_b, i)
 	}
 }
+
+func (s *sByteBuffer) AvailableReadSum() uint64 {
+	return s.globalWP(0) - s.globalRP(0)
+}
+
+func (s *sByteBuffer) globalWP(now uint64) uint64 {
+	if s.WP != s.capital || s.next == nil {
+		return now + s.WP
+	} else {
+		return s.next.(*sByteBuffer).globalWP(now + s.capital)
+	}
+}
+
+func (s *sByteBuffer) globalRP(now uint64) uint64 {
+	if s.WP != s.capital || s.next == nil {
+		return now + s.RP
+	} else {
+		return s.next.(*sByteBuffer).globalRP(now + s.capital)
+	}
+}
+
+func (s *sByteBuffer) FastMoveOut() []byte {
+	panic("sByteBuffer method `FastMoveOut` not support!")
+	return nil
+}
