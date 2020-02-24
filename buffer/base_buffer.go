@@ -32,7 +32,9 @@ type ByteBuffer interface {
 	IOer
 	Cached
 	Size() uint64
-	convert()
+	AvailableReadSum() uint64
+	Convert()
+	FastMoveOut() []byte
 	Mode() OperatorMode
 }
 
@@ -45,7 +47,7 @@ type BaseByteBuffer struct {
 	s       []byte
 }
 
-func (b *BaseByteBuffer) convert() {
+func (b *BaseByteBuffer) Convert() {
 	b.RWType = !b.RWType
 }
 
@@ -93,4 +95,12 @@ func (b *BaseByteBuffer) Reset() {
 
 func (b *BaseByteBuffer) SetAlloc(i interface{}) {
 	b.a = i.(Allocator)
+}
+
+func (b *BaseByteBuffer) AvailableReadSum() uint64 {
+	return b.WP - b.RP - 1
+}
+
+func (b *BaseByteBuffer) FastMoveOut() []byte {
+	return b.s
 }

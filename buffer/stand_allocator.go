@@ -133,6 +133,7 @@ type standAllocator struct {
 	load  uint8
 	r     bool
 	max   uint64
+	regs  int64
 	w     sync.WaitGroup
 }
 
@@ -226,7 +227,7 @@ func (s *standAllocator) dynamicRegulate() {
 		for i := 0; i < len(s.divs); i++ {
 			c.Push(s.divs[i].oper)
 		}
-		time.Sleep(2000)
+		time.Sleep(time.Second * 2)
 		ave := c.Ave()
 		for i := 0; i < len(s.divs); i++ {
 			if s.divs[i].oper <= ave {
@@ -284,4 +285,29 @@ func (s *sByteBuffer) Write0(_b []byte, position uint64) {
 	if i != uint64(len(_b)) {
 		s.next.(*sByteBuffer).Write0(_b, i)
 	}
+}
+
+func (s *sByteBuffer) AvailableReadSum() uint64 {
+	return s.globalWP(0) - s.globalRP(0) - 1
+}
+
+func (s *sByteBuffer) globalWP(now uint64) uint64 {
+	if s.WP != s.capital || s.next == nil {
+		return now + s.WP
+	} else {
+		return s.next.(*sByteBuffer).globalWP(now + s.capital)
+	}
+}
+
+func (s *sByteBuffer) globalRP(now uint64) uint64 {
+	if s.WP != s.capital || s.next == nil {
+		return now + s.RP
+	} else {
+		return s.next.(*sByteBuffer).globalRP(now + s.capital)
+	}
+}
+
+func (s *sByteBuffer) FastMoveOut() []byte {
+	panic("sByteBuffer method `FastMoveOut` not support!")
+	return nil
 }
