@@ -20,20 +20,19 @@ func (c *childChannelImpl) readEvent() {
 
 func (c *childChannelImpl) AsyncReadAndExecutePipeline(i ...interface{}) {
 	e := i[0].(CallBackEvent)
-	b, err := c.ReadAll()
+	b, err := c.Read()
 	if err != nil {
 		e.ChannelPreReadException(c.id, err)
 		return
 	}
 	e.ChannelReadEventComplete(c.id)
-	for index := range b {
-		exp, err := c.l.doPipeline(b[index])
-		if err != nil {
-			e.ChannelOperatorException(c.id, err)
-			continue
-		}
-		(i[1]).(chan buffer.ByteBuffer) <- exp
+	exp, err := c.l.doPipeline(b)
+	if err != nil {
+		e.ChannelOperatorException(c.id, err)
+		return
 	}
+	(i[1]).(chan buffer.ByteBuffer) <- exp
+
 	e.ChannelReadPipelineComplete(c.id)
 }
 
@@ -90,8 +89,4 @@ func (c *childChannelImpl) NetReset() {
 	//TODO
 	//@gyr666 to implement
 	c.call.ChannelPeerReset(c.id)
-}
-
-func (c *childChannelImpl) ReadAll() ([]buffer.ByteBuffer, error) {
-	return nil, nil
 }

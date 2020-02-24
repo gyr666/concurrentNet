@@ -40,12 +40,20 @@ func (s *pipelineImpl) AddFirst(f func(Data)) {
 }
 
 func (s *pipelineImpl) doPipeline(buffer buffer.ByteBuffer, a buffer.Allocator) (buffer.ByteBuffer, error) {
-	tran := s.decoder(buffer)
-	d := &dataImpl{data: tran}
-	for i := range s.pipe {
-		s.pipe[i](d)
+	for {
+		tran, err0 := s.decoder(buffer)
+		if err0 != nil {
+			break
+		}
+		d := &dataImpl{data: tran}
+		for i := range s.pipe {
+			s.pipe[i](d)
+		}
+		if err := s.encoder(d.data, buffer); err != nil {
+			return buffer, err
+		}
 	}
-	return buffer, s.encoder(d.data, buffer)
+	return buffer, nil
 }
 
 func (s *pipelineImpl) AddExceptionHandler(f func(Throwable, Channel)) {
