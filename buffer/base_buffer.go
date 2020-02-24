@@ -1,12 +1,15 @@
 package buffer
 
 import (
+	"errors"
 	"gunplan.top/concurrentNet/util"
 )
 
 type OperatorMode int
 
 const (
+	INDEX_OUTOF_BOUND = "Index out of bound"
+
 	READ  OperatorMode = 1
 	WRITE OperatorMode = 1 << 1
 )
@@ -36,6 +39,8 @@ type ByteBuffer interface {
 	Convert()
 	FastMoveOut() []byte
 	Mode() OperatorMode
+	ShiftRN(n uint64) error
+	ShiftWN(n uint64) error
 }
 
 type BaseByteBuffer struct {
@@ -69,6 +74,22 @@ func (b *BaseByteBuffer) ReadAll() ([]byte, error) {
 
 func (b *BaseByteBuffer) Write(_b []byte) error {
 	return util.StandWrite(b.s, b.capital, &b.WP, _b)
+}
+
+func (b *BaseByteBuffer) ShiftRN(n uint64) error {
+	if b.RP+n > b.capital {
+		return errors.New(INDEX_OUTOF_BOUND)
+	}
+	b.RP += n
+	return nil
+}
+
+func (b *BaseByteBuffer) ShiftWN(n uint64) error {
+	if b.WP+n > b.capital {
+		return errors.New(INDEX_OUTOF_BOUND)
+	}
+	b.WP += n
+	return nil
 }
 
 func (b *BaseByteBuffer) Init(s uint64, all Allocator) {
