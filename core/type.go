@@ -1,5 +1,7 @@
 package core
 
+import "strings"
+
 type ConnectStatus uint8
 
 const (
@@ -14,20 +16,25 @@ const (
 type ServerStatus uint8
 
 const(
-	BOOTING ServerStatus = iota
+	NONE ServerStatus = iota
+	BOOTING
 	RUNNING
 	STOPPING
 	STOPPED
 )
 
-type ChannelType uint8
-
-const (
-	Child  ChannelType = 1
-	Parent ChannelType = 1 << 1
-)
-
 type NetworkInet64 struct {
-	Port    uint32
+	network   string
 	Address string
+}
+
+func parseAddress(addr string)(network,address string){
+	network="tcp"
+	address=addr
+	if strings.Contains(addr,"://"){
+		parts := strings.Split(addr,"://")
+		network=parts[0]
+		address=parts[1]
+	}
+	return
 }

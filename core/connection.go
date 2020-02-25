@@ -15,62 +15,34 @@ type Event interface {
 	exception(Throwable)
 }
 
-type ChildChannel interface {
+type Conn interface {
+	buffer.Cached
 	Event
 	Id() uint64
 	Address() NetworkInet64
 	Status() ConnectStatus
 	AddTrigger(TimeTrigger)
-	Type() ChannelType
 	Write(buffer.ByteBuffer) error
 	Read() (buffer.ByteBuffer, error)
 	Close() error
 	NetReset()
 }
 
-type channelImpl struct {
+func  NewConn() Conn {
+	return &connImpl{}
+}
+
+
+type connImpl struct {
 	id          uint64
 	address     NetworkInet64
 	status      ConnectStatus
-	channelType ChannelType
 	Triggers    []TimeTrigger
 	a           buffer.Allocator
-	cc          ChannelCache
+	cc          ConnCache
 	fd          int
-}
 
-func (c *channelImpl) Address() NetworkInet64 {
-	return c.address
-}
 
-func (c *channelImpl) AddTrigger(t TimeTrigger) {
-	c.Triggers = append(c.Triggers, t)
-}
-
-func (c *channelImpl) Status() ConnectStatus {
-	return c.status
-}
-
-func (c *channelImpl) Type() ChannelType {
-	return c.channelType
-}
-
-func (c *channelImpl) Id() uint64 {
-	return c.id
-}
-
-func (c *channelImpl) Release() {
-	c.cc.release(c)
-}
-
-func (c *channelImpl) Reset() {
-}
-
-func (c *channelImpl) SetAlloc(a interface{}) {
-	c.cc = a.(ChannelCache)
-}
-type childChannelImpl struct {
-	channelImpl
 	l        Pipeline
 	pool     threading.ThreadPool
 	inCache  buffer.ByteBuffer
@@ -79,51 +51,51 @@ type childChannelImpl struct {
 	alloc    buffer.Allocator
 }
 
-func (c *childChannelImpl) readEvent() {
+func (c *connImpl) readEvent() {
 	c.pool.Execwp(c.AsyncReadAndExecutePipeline, c.call, c.outCache)
-	c.call.ChannelReadEventAsyncExecuteComplete(c.id)
+	c.call.ReadEventAsyncExecuteComplete(c.id)
 }
 
-func (c *childChannelImpl) AsyncReadAndExecutePipeline(i ...interface{}) {
+func (c *connImpl) AsyncReadAndExecutePipeline(i ...interface{}) {
 	e := i[0].(CallBackEvent)
 	b, err := c.Read()
 	if err != nil {
-		e.ChannelPreReadException(c.id, err)
+		e.PreReadException(c.id, err)
 		return
 	}
-	e.ChannelReadEventComplete(c.id)
+	e.ReadEventComplete(c.id)
 	exp, err := c.l.doPipeline(b)
 	if err != nil {
-		e.ChannelOperatorException(c.id, err)
+		e.OperatorException(c.id, err)
 		return
 	}
 	(i[1]).(chan buffer.ByteBuffer) <- exp
 
-	e.ChannelReadPipelineComplete(c.id)
+	e.ReadPipelineComplete(c.id)
 }
 
-func (c *childChannelImpl) writeEvent() {
+func (c *connImpl) writeEvent() {
 	c.pool.Execwp(c.AsyncWrite, c.call)
-	c.call.ChannelWriteEventAsyncExecuteComplete(c.id)
+	c.call.WriteEventAsyncExecuteComplete(c.id)
 }
 
-func (c *childChannelImpl) AsyncWrite(i ...interface{}) {
+func (c *connImpl) AsyncWrite(i ...interface{}) {
 	e := i[0].(CallBackEvent)
 	for len(c.outCache) != 0 {
 		if err := c.Write(<-c.outCache); err != nil {
-			e.ChannelPreWriteException(c.id, err)
+			e.PreWriteException(c.id, err)
 			return
 		}
 	}
-	e.ChannelWriteEventComplete(c.id)
+	e.WriteEventComplete(c.id)
 }
 
-func (c *childChannelImpl) closeEvent() {
+func (c *connImpl) closeEvent() {
 	err := c.Close()
-	c.call.ChannelOperatorException(c.id, err)
+	c.call.OperatorException(c.id, err)
 }
 
-func (c *childChannelImpl) exception(t Throwable) {
+func (c *connImpl) exception(t Throwable) {
 	if !t.isUserDefine() {
 		c.closeEvent()
 	} else {
@@ -131,7 +103,7 @@ func (c *childChannelImpl) exception(t Throwable) {
 	}
 }
 
-func (c *childChannelImpl) Write(buffer.ByteBuffer) error {
+func (c *connImpl) Write(buffer.ByteBuffer) error {
 	// block write is ok!
 	//TODO
 
@@ -139,8 +111,7 @@ func (c *childChannelImpl) Write(buffer.ByteBuffer) error {
 	return nil
 }
 
-func (c *childChannelImpl) Read() (buffer.ByteBuffer, error) {
-	// block read is ok!
+func (c *connImpl) Read() (buffer.ByteBuffer, error) {
 	var (
 		err error
 		n   int
@@ -185,14 +156,41 @@ func (c *childChannelImpl) Read() (buffer.ByteBuffer, error) {
 	}
 }
 
-func (c *childChannelImpl) Close() error {
+func (c *connImpl) Close() error {
 	//TODO
 	//@gyr666 to implement
 	return nil
 }
 
-func (c *childChannelImpl) NetReset() {
+func (c *connImpl) NetReset() {
 	//TODO
 	//@gyr666 to implement
-	c.call.ChannelPeerReset(c.id)
+	c.call.PeerReset(c.id)
+}
+
+func (c *connImpl) Address() NetworkInet64 {
+	return c.address
+}
+
+func (c *connImpl) AddTrigger(t TimeTrigger) {
+	c.Triggers = append(c.Triggers, t)
+}
+
+func (c *connImpl) Status() ConnectStatus {
+	return c.status
+}
+
+func (c *connImpl) Id() uint64 {
+	return c.id
+}
+
+func (c *connImpl) Release() {
+	c.cc.release(c)
+}
+
+func (c *connImpl) Reset() {
+}
+
+func (c *connImpl) SetAlloc(a interface{}) {
+	c.cc = a.(ConnCache)
 }
