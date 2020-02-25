@@ -2,6 +2,10 @@ package config
 
 import "gunplan.top/concurrentNet/buffer"
 
+const TypeName = "type"
+const Number = "number"
+const String = "string"
+
 type NetworkType uint8
 
 const (
