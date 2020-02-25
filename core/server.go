@@ -8,10 +8,10 @@ import (
 	"sync"
 )
 
-type ConnInCallback func(c Conn, p Pipeline)
+type ChannelInCallback func(c Channel, p Pipeline)
 
 type Server interface {
-	OnChannelConnect(ConnInCallback) Server
+	OnChannelConnect(ChannelInCallback) Server
 	Option(config.ConfigStrategy) Server
 	WaitType(config.WaitType) Server
 	RegObserve(ServerObserve) Server
@@ -22,7 +22,7 @@ type Server interface {
 
 type ServerImpl struct {
 	u   chan uint8
-	c   ConnInCallback
+	c   ChannelInCallback
 	cfj config.Config
 	n   []NetworkInet64
 	o   ServerObserve
@@ -46,7 +46,7 @@ func (s *ServerImpl) RegObserve(o ServerObserve) Server {
 	return s
 }
 
-func (s *ServerImpl) OnChannelConnect(c ConnInCallback) Server {
+func (s *ServerImpl) OnChannelConnect(c ChannelInCallback) Server {
 	s.c = c
 	return s
 }

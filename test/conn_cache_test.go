@@ -11,7 +11,7 @@ func TestConnCache(t *testing.T) {
 		a.Acquire()
 	}
 	//for i := 0; i < 20000000; i++ {
-	//	core.Factory.NewConn()
+	//	core.Factory.NewChannel()
 	//}
 }
 

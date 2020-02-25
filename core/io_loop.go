@@ -8,11 +8,11 @@ import (
 )
 
 type ioLoop struct {
-	poller *netpoll.Poller
-	conns  map[int]Conn
-	index  int
-	lk     sync.Mutex
-	alloc  buffer.Allocator
+	poller   *netpoll.Poller
+	channels map[int]Channel
+	index    int
+	lk       sync.Mutex
+	alloc    buffer.Allocator
 
 	l Pipeline
 }
@@ -25,7 +25,7 @@ func NewIOLoop(index int,alloc buffer.Allocator) (*ioLoop, error) {
 	lp := &ioLoop{
 		index:  index,
 		poller: poller,
-		conns:  make(map[int]Conn),
+		channels:  make(map[int]Channel),
 		alloc:  alloc,
 	}
 	return lp, nil
@@ -51,7 +51,7 @@ func (lp *ioLoop) close() {
 }
 
 func (lp *ioLoop) eventHandler(fd int,events uint32)error {
-	//if channel,ok:=lp.conns[fd];ok{
+	//if channel,ok:=lp.channels[fd];ok{
 	//	//switch {
 	//	//
 	//	//}

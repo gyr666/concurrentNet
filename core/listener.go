@@ -8,6 +8,6 @@ func (ln *listener) close(){
 
 }
 
-func (ln *listener)accept() Conn {
+func (ln *listener)accept() Channel {
 
 }

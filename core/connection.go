@@ -15,12 +15,12 @@ type Event interface {
 	exception(Throwable)
 }
 
-type Conn interface {
+type Channel interface {
 	buffer.Cached
 	Event
 	Id() uint64
 	Address() NetworkInet64
-	Status() ConnectStatus
+	Status() ChannelStatus
 	AddTrigger(TimeTrigger)
 	Write(buffer.ByteBuffer) error
 	Read() (buffer.ByteBuffer, error)
@@ -28,19 +28,19 @@ type Conn interface {
 	NetReset()
 }
 
-func  NewConn() Conn {
-	return &connImpl{}
+func NewChannel() Channel {
+	return &channelImpl{}
 }
 
 
-type connImpl struct {
-	id          uint64
-	address     NetworkInet64
-	status      ConnectStatus
-	Triggers    []TimeTrigger
-	a           buffer.Allocator
-	cc          ConnCache
-	fd          int
+type channelImpl struct {
+	id       uint64
+	address  NetworkInet64
+	status   ChannelStatus
+	Triggers []TimeTrigger
+	a        buffer.Allocator
+	cc       ChannelCache
+	fd       int
 
 
 	l        Pipeline
@@ -51,12 +51,12 @@ type connImpl struct {
 	alloc    buffer.Allocator
 }
 
-func (c *connImpl) readEvent() {
+func (c *channelImpl) readEvent() {
 	c.pool.Execwp(c.AsyncReadAndExecutePipeline, c.call, c.outCache)
 	c.call.ReadEventAsyncExecuteComplete(c.id)
 }
 
-func (c *connImpl) AsyncReadAndExecutePipeline(i ...interface{}) {
+func (c *channelImpl) AsyncReadAndExecutePipeline(i ...interface{}) {
 	e := i[0].(CallBackEvent)
 	b, err := c.Read()
 	if err != nil {
@@ -74,12 +74,12 @@ func (c *connImpl) AsyncReadAndExecutePipeline(i ...interface{}) {
 	e.ReadPipelineComplete(c.id)
 }
 
-func (c *connImpl) writeEvent() {
+func (c *channelImpl) writeEvent() {
 	c.pool.Execwp(c.AsyncWrite, c.call)
 	c.call.WriteEventAsyncExecuteComplete(c.id)
 }
 
-func (c *connImpl) AsyncWrite(i ...interface{}) {
+func (c *channelImpl) AsyncWrite(i ...interface{}) {
 	e := i[0].(CallBackEvent)
 	for len(c.outCache) != 0 {
 		if err := c.Write(<-c.outCache); err != nil {
@@ -90,12 +90,12 @@ func (c *connImpl) AsyncWrite(i ...interface{}) {
 	e.WriteEventComplete(c.id)
 }
 
-func (c *connImpl) closeEvent() {
+func (c *channelImpl) closeEvent() {
 	err := c.Close()
 	c.call.OperatorException(c.id, err)
 }
 
-func (c *connImpl) exception(t Throwable) {
+func (c *channelImpl) exception(t Throwable) {
 	if !t.isUserDefine() {
 		c.closeEvent()
 	} else {
@@ -103,7 +103,7 @@ func (c *connImpl) exception(t Throwable) {
 	}
 }
 
-func (c *connImpl) Write(buffer.ByteBuffer) error {
+func (c *channelImpl) Write(buffer.ByteBuffer) error {
 	// block write is ok!
 	//TODO
 
@@ -111,7 +111,7 @@ func (c *connImpl) Write(buffer.ByteBuffer) error {
 	return nil
 }
 
-func (c *connImpl) Read() (buffer.ByteBuffer, error) {
+func (c *channelImpl) Read() (buffer.ByteBuffer, error) {
 	var (
 		err error
 		n   int
@@ -147,7 +147,7 @@ func (c *connImpl) Read() (buffer.ByteBuffer, error) {
 			if err == unix.EAGAIN {
 				return c.inCache, nil
 			}
-			return c.alloc.Alloc(0), errConnClose
+			return c.alloc.Alloc(0), errChannelClose
 		}
 		//there is never index out of bound
 		_ = buf.ShiftWN(uint64(n))
@@ -156,41 +156,41 @@ func (c *connImpl) Read() (buffer.ByteBuffer, error) {
 	}
 }
 
-func (c *connImpl) Close() error {
+func (c *channelImpl) Close() error {
 	//TODO
 	//@gyr666 to implement
 	return nil
 }
 
-func (c *connImpl) NetReset() {
+func (c *channelImpl) NetReset() {
 	//TODO
 	//@gyr666 to implement
 	c.call.PeerReset(c.id)
 }
 
-func (c *connImpl) Address() NetworkInet64 {
+func (c *channelImpl) Address() NetworkInet64 {
 	return c.address
 }
 
-func (c *connImpl) AddTrigger(t TimeTrigger) {
+func (c *channelImpl) AddTrigger(t TimeTrigger) {
 	c.Triggers = append(c.Triggers, t)
 }
 
-func (c *connImpl) Status() ConnectStatus {
+func (c *channelImpl) Status() ChannelStatus {
 	return c.status
 }
 
-func (c *connImpl) Id() uint64 {
+func (c *channelImpl) Id() uint64 {
 	return c.id
 }
 
-func (c *connImpl) Release() {
+func (c *channelImpl) Release() {
 	c.cc.release(c)
 }
 
-func (c *connImpl) Reset() {
+func (c *channelImpl) Reset() {
 }
 
-func (c *connImpl) SetAlloc(a interface{}) {
-	c.cc = a.(ConnCache)
+func (c *channelImpl) SetAlloc(a interface{}) {
+	c.cc = a.(ChannelCache)
 }
