@@ -11,7 +11,7 @@ func TestChannelCache(t *testing.T) {
 		a.Acquire(core.Child)
 	}
 	//for i := 0; i < 20000000; i++ {
-	//	core.Factory.NewChildChannelInstance()
+	//	core.Factory.NewConn()
 	//}
 }
 
