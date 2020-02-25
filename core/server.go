@@ -1,36 +1,37 @@
 package core
 
 import (
+	"gunplan.top/concurrentNet/buffer"
+	"gunplan.top/concurrentNet/config"
+	"log"
 	"runtime"
 	"sync"
-
-	"gunplan.top/concurrentNet/config"
 )
 
-type ChannelInCallback func(c Channel, p Pipeline)
+type ConnInCallback func(c Conn, p Pipeline)
 
 type Server interface {
-	OnChannelConnect(ChannelInCallback) Server
-	SetServerSocketChannel(ParentChannel) Server
-	Option(config.GetConfig) Server
-	AddListen(*NetworkInet64) Server
+	OnChannelConnect(ConnInCallback) Server
+	Option(config.ConfigStrategy) Server
 	WaitType(config.WaitType) Server
 	RegObserve(ServerObserve) Server
 	Stop()
-	Sync() uint8
+	Sync() error
 	Join()
 }
 
 type ServerImpl struct {
 	u   chan uint8
-	c   ChannelInCallback
-	i   ParentChannel
-	cfj *config.Config
+	c   ConnInCallback
+	cfj config.Config
 	n   []NetworkInet64
 	o   ServerObserve
 	s   bool
-	lg  subLoopGroup
-	wg  sync.WaitGroup
+	once   sync.Once
+	lk     sync.Mutex
+	loop   *acceptLoop
+	alloc  buffer.Allocator
+	status ServerStatus
 }
 
 func (s *ServerImpl) Init() Server {
@@ -44,27 +45,13 @@ func (s *ServerImpl) RegObserve(o ServerObserve) Server {
 	return s
 }
 
-func (s *ServerImpl) OnChannelConnect(c ChannelInCallback) Server {
+func (s *ServerImpl) OnChannelConnect(c ConnInCallback) Server {
 	s.c = c
-	return s
-}
-
-func (s *ServerImpl) SetServerSocketChannel(i ParentChannel) Server {
-	s.i = i
 	return s
 }
 
 func (s *ServerImpl) Option(strategy config.GetConfig) Server {
 	s.cfj = strategy.Get()
-	return s
-}
-
-func (s *ServerImpl) AddListen(n *NetworkInet64) Server {
-	if s.i == nil {
-		panic("please set parent channel")
-	}
-	s.n = append(s.n, *n)
-	s.i.Listen(n)
 	return s
 }
 
@@ -74,24 +61,90 @@ func (s *ServerImpl) WaitType(w config.WaitType) Server {
 }
 
 func (s *ServerImpl) Stop() {
+	s.once.Do(func() {
+		s.u <- 1
+		s.lk.Lock()
+		s.status = STOPPING
+		s.lk.Unlock()
+
+	})
 	s.o.OnStopping()
-	s.u <- 1
-	s.o.OnStopped()
 }
 
 func (s *ServerImpl) Join() {
 	<-s.u
+
+	s.loop.stop()
+	s.loop.close()
+	if err := s.alloc.Destroy(); err != nil {
+		log.Println(err)
+	}
+
+	s.lk.Lock()
+	s.status = STOPPED
+	s.lk.Unlock()
+	s.o.OnStopped()
 }
 
-func (s *ServerImpl) Sync() uint8 {
+func (s *ServerImpl) Sync() error {
+	s.lk.Lock()
+	s.status = BOOTING
+	s.lk.Unlock()
 	s.o.OnBooting()
-	//todo use callback
-	if s.s {
-		s.o.OnBooted(s.n)
-		s.Join()
+
+	s.alloc = buffer.NewLikedBufferAllocator()
+	if err := s.startLoops(); err != nil {
+		log.Println(err)
+		return errBoot
 	}
-	s.o.OnBooted(s.n)
-	return 0
+
+	s.lk.Lock()
+	s.status = RUNNING
+	s.lk.Unlock()
+	s.o.OnRunning(s.n)
+
+	s.Join()
+	return nil
+}
+
+func (s *ServerImpl) startLoops() (err error) {
+	var (
+		lg  ioLoopGroup
+		alp *acceptLoop
+	)
+	defer func() {
+		if err != nil {
+			if alp != nil {
+				alp.close()
+			} else {
+				lg.iterate(func(lp *ioLoop) bool {
+					lp.close()
+					return true
+				})
+			}
+		}
+	}()
+
+	var lp *ioLoop
+	cpuNum := runtime.NumCPU()
+	for i := 0; i < cpuNum; i++ {
+		lp, err = NewIOLoop(i, s.alloc)
+		if err != nil {
+			return
+		}
+		lg.registe(lp)
+	}
+
+	alp, err = NewAcceptLoop(&lg)
+	if err != nil {
+		return
+	}
+	s.loop = alp
+	err = s.loop.start()
+	if err != nil {
+		return
+	}
+	return nil
 }
 
 func (s *ServerImpl) startLoops() error {

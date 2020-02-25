@@ -39,9 +39,9 @@ func (p *Poller) Close() {
 	_ = unix.Close(p.pfd)
 }
 
-func (p *Poller) Polling(callback func() error) error {
+func (p *Poller) Polling(callback func(int,uint32) error) error {
 	var wakeup bool
-	el := newEventList(128)
+	el := newEventList(InitEvents)
 	for {
 		n, err0 := unix.EpollWait(p.pfd, el.events, -1)
 		if err0 != nil && err0 == unix.EINTR {
@@ -49,8 +49,8 @@ func (p *Poller) Polling(callback func() error) error {
 			continue
 		}
 		for i := 0; i < n; i++ {
-			if fd := int(el.events[i].Fd); fd != p.wfd {
-				if err := callback(); err != nil {
+			if fd,events:= int(el.events[i].Fd),el.events[i].Events; fd != p.wfd {
+				if err := callback(fd,events); err != nil {
 					log.Println(err)
 				}
 			} else {

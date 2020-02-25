@@ -5,13 +5,13 @@ import (
 	"testing"
 )
 
-func TestChannelCache(t *testing.T) {
+func TestConnCache(t *testing.T) {
 	a := core.NewChannelCache()
 	for i := 0; i < 2000000; i++ {
-		a.Acquire(core.Child)
+		a.Acquire()
 	}
 	//for i := 0; i < 20000000; i++ {
-	//	core.Factory.NewChildChannelInstance()
+	//	core.Factory.NewConn()
 	//}
 }
 
