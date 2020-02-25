@@ -1,6 +1,10 @@
 package core
 
-import "gunplan.top/concurrentNet/config"
+import (
+	"gunplan.top/concurrentNet/config"
+	"runtime"
+	"sync"
+)
 
 type ChannelInCallback func(c Channel, p Pipeline)
 
@@ -24,6 +28,8 @@ type ServerImpl struct {
 	n   []NetworkInet64
 	o   ServerObserve
 	s   bool
+	lg  subLoopGroup
+	wg  sync.WaitGroup
 }
 
 func (s *ServerImpl) Init() Server {
@@ -86,4 +92,36 @@ func (s *ServerImpl) Sync() uint8 {
 	}
 	s.o.OnBooted(s.n)
 	return 0
+}
+
+func (s *ServerImpl) startLoops() error {
+	var lps []Loop
+	cpuNum := runtime.NumCPU()
+	for i := 0; i < cpuNum; i++ {
+		slp, err := NewSubLoop()
+		if err != nil {
+			return err
+		}
+		lps = append(lps, slp)
+	}
+	mlp, err := NewMainLoop()
+	if err != nil {
+		return err
+	}
+	lps = append(lps, mlp)
+
+	//To make mlp at the first of the loopGroup , when use iterate close loops , will close mlp first
+	for i := len(lps) - 1; i >= 0; i-- {
+		s.lg.registe(lps[i])
+	}
+
+	s.lg.iterate(func(lp Loop) bool {
+		s.wg.Add(1)
+		go func() {
+			lp.start()
+			s.wg.Done()
+		}()
+		return true
+	})
+	return nil
 }
