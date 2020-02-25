@@ -13,7 +13,7 @@ func NewSpinlock() sync.Locker {
 }
 
 func (s *Spinlock) Lock() {
-	if !atomic.CompareAndSwapUint32((*uint32)(s), 0, 1) {
+	for !atomic.CompareAndSwapUint32((*uint32)(s), 0, 1) {
 		runtime.Gosched()
 	}
 }
