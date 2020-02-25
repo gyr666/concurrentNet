@@ -27,7 +27,6 @@ type ServerImpl struct {
 	n   []NetworkInet64
 	o   ServerObserve
 	s   bool
-
 	once   sync.Once
 	lk     sync.Mutex
 	loop   *acceptLoop
@@ -51,9 +50,8 @@ func (s *ServerImpl) OnChannelConnect(c ConnInCallback) Server {
 	return s
 }
 
-func (s *ServerImpl) Option(strategy config.ConfigStrategy) Server {
-	s.cfj = config.Config{}
-	strategy.Fill(&s.cfj)
+func (s *ServerImpl) Option(strategy config.GetConfig) Server {
+	s.cfj = strategy.Get()
 	return s
 }
 
@@ -146,5 +144,37 @@ func (s *ServerImpl) startLoops() (err error) {
 	if err != nil {
 		return
 	}
+	return nil
+}
+
+func (s *ServerImpl) startLoops() error {
+	var lps []Loop
+	cpuNum := runtime.NumCPU()
+	for i := 0; i < cpuNum; i++ {
+		slp, err := NewSubLoop()
+		if err != nil {
+			return err
+		}
+		lps = append(lps, slp)
+	}
+	mlp, err := NewMainLoop()
+	if err != nil {
+		return err
+	}
+	lps = append(lps, mlp)
+
+	//To make mlp at the first of the loopGroup , when use iterate close loops , will close mlp first
+	for i := len(lps) - 1; i >= 0; i-- {
+		s.lg.registe(lps[i])
+	}
+
+	s.lg.iterate(func(lp Loop) bool {
+		s.wg.Add(1)
+		go func() {
+			lp.start()
+			s.wg.Done()
+		}()
+		return true
+	})
 	return nil
 }
