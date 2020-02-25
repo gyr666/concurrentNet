@@ -2,26 +2,21 @@ package config
 
 import "gunplan.top/concurrentNet/buffer"
 
-type ConfigStrategy interface {
-	Fill(*Config) error
-}
-
-type ConfigDecoder interface {
-	Decode(byteBuffer buffer.ByteBuffer, config *Config)
-}
-
-type ServiceGetter interface {
-	FetchToMemory() buffer.ByteBuffer
-	Decode() ConfigDecoder
-}
+type ConfigDecoder func(byteBuffer buffer.ByteBuffer, config *Config) error
+type Fetcher func() buffer.ByteBuffer
 
 type GetConfig struct {
-	sg ServiceGetter
+	c ConfigDecoder
+	f Fetcher
+}
+
+func (g *GetConfig) Init(c ConfigDecoder, f Fetcher) {
+	g.f = f
+	g.c = c
 }
 
 func (g *GetConfig) Get() *Config {
-	b := g.sg.FetchToMemory()
 	c := Config{}
-	g.sg.Decode().Decode(b, &c)
+	g.c(g.f(), &c)
 	return &c
 }
