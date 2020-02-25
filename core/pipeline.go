@@ -11,16 +11,16 @@ type Pipeline interface {
 	AddDeCoder(coder.Decode)
 	AddLast(func(Data) Data)
 	AddFirst(func(Data) Data)
-	AddExceptionHandler(func(Throwable, Conn))
+	AddExceptionHandler(func(Throwable, Channel))
 	doPipeline(buffer buffer.ByteBuffer) (buffer.ByteBuffer, error)
-	doException(throwable Throwable, channel Conn)
+	doException(throwable Throwable, channel Channel)
 }
 
 type pipelineImpl struct {
 	encoder coder.Encode
 	decoder coder.Decode
 	pipe    []func(Data)
-	t       func(Throwable, Conn)
+	t       func(Throwable, Channel)
 }
 
 func (s *pipelineImpl) addEnCoder(e coder.Encode) {
@@ -57,10 +57,10 @@ func (s *pipelineImpl) doPipeline(inBuffer buffer.ByteBuffer, outBuffer buffer.B
 	return nil
 }
 
-func (s *pipelineImpl) AddExceptionHandler(f func(Throwable, Conn)) {
+func (s *pipelineImpl) AddExceptionHandler(f func(Throwable, Channel)) {
 	s.t = f
 }
 
-func (s *pipelineImpl) doException(throwable Throwable, channel Conn) {
+func (s *pipelineImpl) doException(throwable Throwable, channel Channel) {
 	s.t(throwable, channel)
 }

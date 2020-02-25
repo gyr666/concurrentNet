@@ -4,18 +4,18 @@ import (
 	"sync"
 )
 
-type ConnCache interface {
-	Acquire() Conn
-	release(c Conn)
+type ChannelCache interface {
+	Acquire() Channel
+	release(c Channel)
 }
 
-func NewChannelCache() ConnCache {
-	c := connCacheImpl{load: 100}
+func NewChannelCache() ChannelCache {
+	c := channelCacheImpl{load: 100}
 	return c.Init()
 }
 
 type LinkedChannel struct {
-	c    Conn
+	c    Channel
 	next *LinkedChannel
 }
 
@@ -23,11 +23,11 @@ type channelCacheMeta struct {
 	first *LinkedChannel
 	l     sync.Mutex
 	index uint8
-	a     ConnCache
+	a     ChannelCache
 	load  uint8
 }
 
-func (c *channelCacheMeta) init(load uint8, a ConnCache, index uint8) {
+func (c *channelCacheMeta) init(load uint8, a ChannelCache, index uint8) {
 	c.load = load
 	c.a = a
 	c.index = index
@@ -39,15 +39,15 @@ func (c *channelCacheMeta) createList() {
 	defer c.l.Unlock()
 	lc := make([]LinkedChannel, c.load)
 	for i := 0; i < len(lc)-1; i++ {
-		lc[i].c = &connImpl{}
-		lc[i].c.(*connImpl).id = uint64(i)
+		lc[i].c = &channelImpl{}
+		lc[i].c.(*channelImpl).id = uint64(i)
 		lc[i].c.SetAlloc(c.a)
 		lc[i].next = &lc[i+1]
 	}
 	c.first = &lc[0]
 }
 
-func (c *channelCacheMeta) Alloc() Conn {
+func (c *channelCacheMeta) Alloc() Channel {
 	c.l.Lock()
 	defer c.l.Unlock()
 	v := c.first
@@ -56,7 +56,7 @@ func (c *channelCacheMeta) Alloc() Conn {
 	return v.c
 }
 
-func (c *channelCacheMeta) release(ch Conn) {
+func (c *channelCacheMeta) release(ch Channel) {
 	c.l.Lock()
 	defer c.l.Unlock()
 	ch.Reset()
@@ -74,13 +74,13 @@ func (c *channelCacheMeta) checkSelfAddUpdate() bool {
 	return true
 }
 
-type connCacheImpl struct {
+type channelCacheImpl struct {
 	meta []channelCacheMeta
 	load uint8
 	i    uint8
 }
 
-func (c *connCacheImpl) Init() ConnCache {
+func (c *channelCacheImpl) Init() ChannelCache {
 	c.meta = make([]channelCacheMeta, c.load)
 	for i := range c.meta {
 		c.meta[i].init( 200, c, uint8(i))
@@ -88,7 +88,7 @@ func (c *connCacheImpl) Init() ConnCache {
 	return c
 }
 
-func (c *connCacheImpl) Acquire() Conn {
+func (c *channelCacheImpl) Acquire() Channel {
 	for {
 		in := c.next()
 		if c.meta[in].checkSelfAddUpdate() {
@@ -97,11 +97,11 @@ func (c *connCacheImpl) Acquire() Conn {
 	}
 }
 
-func (c *connCacheImpl) release(ch Conn) {
+func (c *channelCacheImpl) release(ch Channel) {
 	c.meta[c.next()].release(ch)
 }
 
-func (c *connCacheImpl) next() uint8 {
+func (c *channelCacheImpl) next() uint8 {
 	c.i++
 	if c.i == c.load {
 		c.i = 0

@@ -73,14 +73,14 @@ func (alp *acceptLoop) eventHandler(fd int, ev uint32) error {
 	//}
 	//lp := alp.lg.next()
 	//
-	//channel := alp.factory.NewConn(nfd, sa)
+	//channel := alp.factory.NewChannel(nfd, sa)
 	//
 	//lp.poller.Trigger(func() error {
 	//	if err := lp.poller.AddReader(nfd); err != nil {
 	//		log.Println(err)
 	//		return nil
 	//	}
-	//	lp.conns[nfd] = channel
+	//	lp.channels[nfd] = channel
 	//	return nil
 	//})
 

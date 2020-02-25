@@ -8,7 +8,7 @@ type Data interface {
 	ProduceEvent(TransferEvent)
 	GetThrow() *Throwable
 	SetThrow(*Throwable)
-	Channel() Conn
+	Channel() Channel
 	GetData() interface{}
 	SetData(interface{})
 }
@@ -17,10 +17,10 @@ type dataImpl struct {
 	data  interface{}
 	event chan TransferEvent
 	throw *Throwable
-	c     Conn
+	c     Channel
 }
 
-func (d *dataImpl) Channel() Conn {
+func (d *dataImpl) Channel() Channel {
 	return d.c
 }
 

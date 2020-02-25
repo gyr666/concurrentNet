@@ -2,15 +2,15 @@ package core
 
 import "strings"
 
-type ConnectStatus uint8
+type ChannelStatus uint8
 
 const (
-	NORMAL ConnectStatus = 1
-	CLOSED ConnectStatus = 1 << 1
-	RESET  ConnectStatus = 1 << 2
-	WARN0  ConnectStatus = 1 << 3
-	WARN1  ConnectStatus = 1 << 4
-	WARN2  ConnectStatus = 1 << 5
+	NORMAL ChannelStatus = 1
+	CLOSED ChannelStatus = 1 << 1
+	RESET  ChannelStatus = 1 << 2
+	WARN0  ChannelStatus = 1 << 3
+	WARN1  ChannelStatus = 1 << 4
+	WARN2  ChannelStatus = 1 << 5
 )
 
 type ServerStatus uint8
