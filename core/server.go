@@ -1,11 +1,12 @@
 package core
 
 import (
-	"gunplan.top/concurrentNet/buffer"
-	"gunplan.top/concurrentNet/config"
 	"log"
 	"runtime"
 	"sync"
+
+	"gunplan.top/concurrentNet/buffer"
+	"gunplan.top/concurrentNet/config"
 )
 
 type ChannelInCallback func(c Channel, p Pipeline)
@@ -21,12 +22,12 @@ type Server interface {
 }
 
 type ServerImpl struct {
-	u   chan uint8
-	c   ChannelInCallback
-	cfj config.Config
-	n   []NetworkInet64
-	o   ServerObserve
-	s   bool
+	u      chan uint8
+	c      ChannelInCallback
+	cfj    config.Config
+	n      []NetworkInet64
+	o      ServerObserve
+	s      bool
 	once   sync.Once
 	lk     sync.Mutex
 	loop   *acceptLoop

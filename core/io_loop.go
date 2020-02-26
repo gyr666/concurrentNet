@@ -1,10 +1,11 @@
 package core
 
 import (
-	"gunplan.top/concurrentNet/buffer"
-	"gunplan.top/concurrentNet/core/netpoll"
 	"log"
 	"sync"
+
+	"gunplan.top/concurrentNet/buffer"
+	"gunplan.top/concurrentNet/core/netpoll"
 )
 
 type ioLoop struct {
@@ -17,23 +18,23 @@ type ioLoop struct {
 	l Pipeline
 }
 
-func NewIOLoop(index int,alloc buffer.Allocator) (*ioLoop, error) {
+func NewIOLoop(index int, alloc buffer.Allocator) (*ioLoop, error) {
 	poller, err := netpoll.NewPoller()
 	if err != nil {
 		return nil, err
 	}
 	lp := &ioLoop{
-		index:  index,
-		poller: poller,
-		channels:  make(map[int]Channel),
-		alloc:  alloc,
+		index:    index,
+		poller:   poller,
+		channels: make(map[int]Channel),
+		alloc:    alloc,
 	}
 	return lp, nil
 }
 
 func (lp *ioLoop) start() {
 
-	if err:= lp.poller.Polling(lp.eventHandler);err!=nil{
+	if err := lp.poller.Polling(lp.eventHandler); err != nil {
 		log.Println(err)
 	}
 }
@@ -50,7 +51,7 @@ func (lp *ioLoop) close() {
 	lp.poller.Close()
 }
 
-func (lp *ioLoop) eventHandler(fd int,events uint32)error {
+func (lp *ioLoop) eventHandler(fd int, events uint32) error {
 	//if channel,ok:=lp.channels[fd];ok{
 	//	//switch {
 	//	//
@@ -62,6 +63,3 @@ func (lp *ioLoop) eventHandler(fd int,events uint32)error {
 func (lp *ioLoop) Read(buffer.ByteBuffer, error) {
 
 }
-
-
-

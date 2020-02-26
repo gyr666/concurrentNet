@@ -1,9 +1,10 @@
 package core
 
 import (
-	"gunplan.top/concurrentNet/core/netpoll"
 	"log"
 	"sync"
+
+	"gunplan.top/concurrentNet/core/netpoll"
 )
 
 type acceptLoop struct {

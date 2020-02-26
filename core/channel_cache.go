@@ -83,7 +83,7 @@ type channelCacheImpl struct {
 func (c *channelCacheImpl) Init() ChannelCache {
 	c.meta = make([]channelCacheMeta, c.load)
 	for i := range c.meta {
-		c.meta[i].init( 200, c, uint8(i))
+		c.meta[i].init(200, c, uint8(i))
 	}
 	return c
 }

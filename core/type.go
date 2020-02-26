@@ -15,7 +15,7 @@ const (
 
 type ServerStatus uint8
 
-const(
+const (
 	NONE ServerStatus = iota
 	BOOTING
 	RUNNING
@@ -24,17 +24,17 @@ const(
 )
 
 type NetworkInet64 struct {
-	network   string
+	network string
 	Address string
 }
 
-func parseAddress(addr string)(network,address string){
-	network="tcp"
-	address=addr
-	if strings.Contains(addr,"://"){
-		parts := strings.Split(addr,"://")
-		network=parts[0]
-		address=parts[1]
+func parseAddress(addr string) (network, address string) {
+	network = "tcp"
+	address = addr
+	if strings.Contains(addr, "://") {
+		parts := strings.Split(addr, "://")
+		network = parts[0]
+		address = parts[1]
 	}
 	return
 }
