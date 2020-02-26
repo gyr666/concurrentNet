@@ -123,31 +123,27 @@ func (c *channelImpl) Read() (buffer.ByteBuffer, error) {
 	initSz := uint64(1024)
 
 	for {
-		//之前未读完数据的切片
-		head := c.inCache.GetRP()
 		sz := c.inCache.AvailableReadSum()
-		bytes := c.inCache.FastMoveOut()[head : head+sz]
-
-		//申请新的 buffer
 		buf := c.alloc.Alloc(initSz)
-		//把之前数据的写入新的 buffer
+		n, err = unix.Read(c.fd, buf.FastMoveOut()[sz:])
+		if n == 0 || err != nil {
+			buf.Release()
+			if err == unix.EAGAIN {
+				return c.inCache, nil
+			}
+			return c.alloc.Alloc(0), errChannelClose
+		}
+		head := c.inCache.GetRP()
+		bytes := c.inCache.FastMoveOut()[head : head+sz]
 		if sz != 0 {
 			err = buf.Write(bytes)
 			if err != nil {
 				return c.alloc.Alloc(0), nil
 			}
 		}
-		//再将连接读到的数据写入新的 buffer
-		bytes = buf.FastMoveOut()
-		n, err = unix.Read(c.fd, bytes[sz:])
-		if n == 0 || err != nil {
-			if err == unix.EAGAIN {
-				return c.inCache, nil
-			}
-			return c.alloc.Alloc(0), errChannelClose
-		}
 		//there is never index out of bound
 		_ = buf.ShiftWN(uint64(n))
+		c.inCache.Release()
 		c.inCache = buf
 		initSz <<= 1
 	}
