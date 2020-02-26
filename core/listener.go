@@ -1,13 +1,12 @@
 package core
 
-type listener struct{
+type listener struct {
+}
+
+func (ln *listener) close() {
 
 }
 
-func (ln *listener) close(){
-
-}
-
-func (ln *listener)accept() Channel {
+func (ln *listener) accept() Channel {
 
 }

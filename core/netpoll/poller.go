@@ -1,10 +1,12 @@
 package netpoll
 
 import (
-	"golang.org/x/sys/unix"
-	"gunplan.top/concurrentNet/util"
 	"log"
 	"unsafe"
+
+	"golang.org/x/sys/unix"
+
+	"gunplan.top/concurrentNet/util"
 )
 
 type Poller struct {
@@ -39,7 +41,7 @@ func (p *Poller) Close() {
 	_ = unix.Close(p.pfd)
 }
 
-func (p *Poller) Polling(callback func(int,uint32) error) error {
+func (p *Poller) Polling(callback func(int, uint32) error) error {
 	var wakeup bool
 	el := newEventList(InitEvents)
 	for {
@@ -49,8 +51,8 @@ func (p *Poller) Polling(callback func(int,uint32) error) error {
 			continue
 		}
 		for i := 0; i < n; i++ {
-			if fd,events:= int(el.events[i].Fd),el.events[i].Events; fd != p.wfd {
-				if err := callback(fd,events); err != nil {
+			if fd, events := int(el.events[i].Fd), el.events[i].Events; fd != p.wfd {
+				if err := callback(fd, events); err != nil {
 					log.Println(err)
 				}
 			} else {

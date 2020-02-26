@@ -2,8 +2,9 @@ package config
 
 import (
 	"fmt"
-	"gunplan.top/concurrentNet/buffer"
 	"io/ioutil"
+
+	"gunplan.top/concurrentNet/buffer"
 )
 
 type GetFromDefaultStrategy struct {

@@ -20,7 +20,7 @@ func (g *ioLoopGroup) next() *ioLoop {
 }
 
 func (g *ioLoopGroup) iterate(f func(*ioLoop) bool) {
-	for _,loop:=range g.loops{
+	for _, loop := range g.loops {
 		if !f(loop) {
 			break
 		}

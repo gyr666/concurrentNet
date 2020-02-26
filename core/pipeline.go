@@ -39,7 +39,7 @@ func (s *pipelineImpl) AddFirst(f func(Data)) {
 	s.pipe = append(s.pipe, f)
 }
 
-func (s *pipelineImpl) doPipeline(inBuffer buffer.ByteBuffer, outBuffer buffer.ByteBuffer) (error) {
+func (s *pipelineImpl) doPipeline(inBuffer buffer.ByteBuffer, outBuffer buffer.ByteBuffer) error {
 	//TODO
 	//for{
 	//	tran,err:= s.decoder(inBuffer)

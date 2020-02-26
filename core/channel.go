@@ -2,11 +2,10 @@ package core
 
 import (
 	"golang.org/x/sys/unix"
+
 	"gunplan.top/concurrentNet/buffer"
 	"gunplan.top/concurrentNet/threading"
 )
-
-
 
 type Event interface {
 	readEvent()
@@ -32,7 +31,6 @@ func NewChannel() Channel {
 	return &channelImpl{}
 }
 
-
 type channelImpl struct {
 	id       uint64
 	address  NetworkInet64
@@ -41,7 +39,6 @@ type channelImpl struct {
 	a        buffer.Allocator
 	cc       ChannelCache
 	fd       int
-
 
 	l        Pipeline
 	pool     threading.ThreadPool
