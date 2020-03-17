@@ -12,7 +12,7 @@ type ChannelInCallback func(c Channel, p Pipeline)
 type Server interface {
 	OnChannelConnect(ChannelInCallback) Server
 	SetServerSocketChannel(ParentChannel) Server
-	Option(config.GetConfig) Server
+	Option(*config.GetConfig) Server
 	AddListen(*NetworkInet64) Server
 	WaitType(config.WaitType) Server
 	RegObserve(ServerObserve) Server
@@ -54,7 +54,7 @@ func (s *ServerImpl) SetServerSocketChannel(i ParentChannel) Server {
 	return s
 }
 
-func (s *ServerImpl) Option(strategy config.GetConfig) Server {
+func (s *ServerImpl) Option(strategy *config.GetConfig) Server {
 	s.cfj = strategy.Get()
 	return s
 }

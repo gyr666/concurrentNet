@@ -10,9 +10,10 @@ type GetConfig struct {
 	f Fetcher
 }
 
-func (g *GetConfig) Init(c ConfigDecoder, f Fetcher) {
+func (g *GetConfig) Init(c ConfigDecoder, f Fetcher) *GetConfig {
 	g.f = f
 	g.c = c
+	return g
 }
 
 func (g *GetConfig) Get() *Config {
