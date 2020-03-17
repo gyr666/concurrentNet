@@ -67,7 +67,7 @@ func (t *threadPoolImpl) LaunchWork() {
 		case task := <-t.workQueue:
 			// core execute unit
 			task.rev <- task.t(task.param...)
-			//control unit
+			// control unit
 		case op := <-t.controlChannel:
 			switch op {
 
@@ -138,6 +138,7 @@ func (t *threadPoolImpl) waitStop(c ControlType) {
 	t.controlChannel <- c
 	go func() {
 		t.g.Wait()
+		close(t.controlChannel)
 		t.status = STOPPED
 	}()
 }
@@ -146,6 +147,8 @@ func (t *threadPoolImpl) addQueue(task *Task) {
 	switch t.status {
 	case RUNNING:
 		t.workQueue <- task
+	case STOPPED:
+		fallthrough
 	case STOPPING:
 		panic("pool has been close")
 	}
