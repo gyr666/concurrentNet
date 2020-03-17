@@ -9,6 +9,10 @@ import (
 	"gunplan.top/concurrentNet/config"
 )
 
+func NewConcurrentNet() Server {
+	return &ServerImpl{}
+}
+
 type ChannelInCallback func(c Channel, p Pipeline)
 
 type Server interface {
@@ -95,7 +99,7 @@ func (s *ServerImpl) Sync() error {
 
 	s.alloc = buffer.NewLikedBufferAllocator()
 	if err := s.startLoops(); err != nil {
-		log.Println(err)
+		log.Fatal(err)
 		return errBoot
 	}
 

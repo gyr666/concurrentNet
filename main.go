@@ -10,15 +10,14 @@ import (
 )
 
 func main() {
+	c := config.GetConfig{}
 	server := core.NewConcurrentNet()
 	server.OnChannelConnect(func(c core.Channel, p core.Pipeline) {
 		p.AddLast(func(d core.Data) core.Data {
 			return d
 		})
 	}).
-		SetServerSocketChannel(core.Factory.NewParentChannelInstance()).
-		Option(config.GetConfig{}.Init(config.LineDecoder, config.DefaultFetcher)).
-		AddListen(&core.NetworkInet64{Port: 7788}).
+		Option(c.Init(config.LineDecoder, config.DefaultFetcher)).
 		WaitType(config.ASYNC)
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc,
@@ -29,6 +28,6 @@ func main() {
 		<-sc
 		server.Stop()
 	}()
-	server.Sync()
+	_ = server.Sync()
 	server.Join()
 }
