@@ -13,7 +13,7 @@ type Pipeline interface {
 	AddFirst(func(Data) Data)
 	AddExceptionHandler(func(Throwable, Channel))
 	doPipeline(buffer buffer.ByteBuffer) (buffer.ByteBuffer, error)
-	doException(throwable Throwable, channel ChildChannel)
+	doException(throwable Throwable, channel Channel)
 }
 
 type pipelineImpl struct {
@@ -39,19 +39,28 @@ func (s *pipelineImpl) AddFirst(f func(Data)) {
 	s.pipe = append(s.pipe, f)
 }
 
-func (s *pipelineImpl) doPipeline(buffer buffer.ByteBuffer, a buffer.Allocator) (buffer.ByteBuffer, error) {
-	tran := s.decoder(buffer)
-	d := &dataImpl{data: tran}
-	for i := range s.pipe {
-		s.pipe[i](d)
-	}
-	return buffer, s.encoder(d.data, buffer)
+func (s *pipelineImpl) doPipeline(inBuffer buffer.ByteBuffer, outBuffer buffer.ByteBuffer) error {
+	//TODO
+	//for{
+	//	tran,err:= s.decoder(inBuffer)
+	//	if err!=nil{
+	//		return err
+	//	}
+	//	d := &dataImpl{data: tran}
+	//	for i := range s.pipe {
+	//		s.pipe[i](d)
+	//	}
+	//	s.encoder
+	//}
+	//
+	//return buffer, s.encoder(d.data, buffer)
+	return nil
 }
 
 func (s *pipelineImpl) AddExceptionHandler(f func(Throwable, Channel)) {
 	s.t = f
 }
 
-func (s *pipelineImpl) doException(throwable Throwable, channel ChildChannel) {
+func (s *pipelineImpl) doException(throwable Throwable, channel Channel) {
 	s.t(throwable, channel)
 }

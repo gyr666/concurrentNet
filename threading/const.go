@@ -8,10 +8,10 @@ const (
 	RUNNING  PoolState = 1 << 1
 	WAITING  PoolState = 1 << 2
 	STOPPING PoolState = 1 << 3
+	BOOTING  PoolState = 1 << 4
 )
 
 const (
-	STOPANY     ControlType = 1
-	SHUTDOWNNOW ControlType = 1 << 1
+	ShutdownNow ControlType = 1 << 1
 	SHUTDOWN    ControlType = 1 << 2
 )

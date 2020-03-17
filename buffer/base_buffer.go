@@ -2,6 +2,7 @@ package buffer
 
 import (
 	"errors"
+
 	"gunplan.top/concurrentNet/util"
 )
 
@@ -41,6 +42,7 @@ type ByteBuffer interface {
 	Mode() OperatorMode
 	ShiftRN(n uint64) error
 	ShiftWN(n uint64) error
+	GetRP() uint64
 }
 
 type BaseByteBuffer struct {
@@ -69,7 +71,7 @@ func (b *BaseByteBuffer) Read(i uint64) ([]byte, error) {
 }
 
 func (b *BaseByteBuffer) ReadAll() ([]byte, error) {
-	return util.StandRead((b.RP), b.s, b.capital, &b.RP)
+	return util.StandRead(b.AvailableReadSum(), b.s, b.capital, &b.RP)
 }
 
 func (b *BaseByteBuffer) Write(_b []byte) error {
@@ -119,9 +121,13 @@ func (b *BaseByteBuffer) SetAlloc(i interface{}) {
 }
 
 func (b *BaseByteBuffer) AvailableReadSum() uint64 {
-	return b.WP - b.RP - 1
+	return b.WP - b.RP
 }
 
 func (b *BaseByteBuffer) FastMoveOut() []byte {
 	return b.s
+}
+
+func (b *BaseByteBuffer) GetRP() uint64 {
+	return b.RP
 }

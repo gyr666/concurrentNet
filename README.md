@@ -1,12 +1,14 @@
 # ConcurrentNet
 a network platform to support high concurrent 
 ## Information
-Developer   : [**@gyr666**](https://github.com/gyr666) [@H00001(frank)](https://github.com/H00001)  
-Language    : Golang 1.13.5, gnuc17  
-Environment : Gnu Linux, OS x. not Windows  
-Version     : 0.0.0.1  
-License     : GUN GENERAL PUBLIC LICENSE 3.0  
-Website     : ?
+|Information||
+| - | - |
+|Developer   | [**@gyr666**](https://github.com/gyr666) [@H00001(frank)](https://github.com/H00001) [@msyyyy(yangweiyao)](https://github.com/msyyyy) | 
+|Language    |Golang 1.13.5, gnuc17  |
+|Environment | Gnu Linux, OS x. not Windows |  
+|Version     | 0.0.0.1  |
+|License     | GUN GENERAL PUBLIC LICENSE 3.0 |  
+|Website     | ?  |
 
 # GET START
 ### Test
@@ -41,11 +43,13 @@ Website     : ?
 ### Then Test It
 ```bash
 telnet [::]:1 7788
-telent> Hello
-telnet> Hello
+telent> Ping
+Pong
 ```
 
 # PACKAGE INTURDUCE
+## core
+package `core`
 ## buffer
 package `buffer` implement the `buffer alloctor` by `bitmap` and `skiplist`.
 ## pipeline
