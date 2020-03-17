@@ -6,7 +6,7 @@ import (
 
 type subLoop struct {
 	poller   *netpoll.Poller
-	channels map[int]ChildChannel
+	channels map[int]channelImpl
 }
 
 func NewSubLoop() (*subLoop, error) {
@@ -16,7 +16,7 @@ func NewSubLoop() (*subLoop, error) {
 	}
 	slp := &subLoop{
 		poller:   poller,
-		channels: make(map[int]ChildChannel),
+		channels: make(map[int]channelImpl),
 	}
 	return slp, nil
 }
