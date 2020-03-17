@@ -12,7 +12,7 @@ const (
 )
 
 const (
-	STOPANY     ControlType = 1
-	SHUTDOWNNOW ControlType = 1 << 1
+	ShutdownAny ControlType = 1
+	ShutdownNow ControlType = 1 << 1
 	SHUTDOWN    ControlType = 1 << 2
 )
