@@ -1,6 +1,5 @@
 package threading
 
-
 type Future interface {
 	isDone() bool
 	Get() interface{}
@@ -11,6 +10,9 @@ type futureImpl struct {
 }
 
 func (f *futureImpl) Get() interface{} {
+	defer func() {
+		close(*f.wait)
+	}()
 	return <-*f.wait
 }
 
