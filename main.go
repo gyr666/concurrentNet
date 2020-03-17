@@ -16,9 +16,7 @@ func main() {
 			return d
 		})
 	}).
-		SetServerSocketChannel(core.Factory.NewParentChannelInstance()).
 		Option(config.GetConfig{}.Init(config.LineDecoder, config.DefaultFetcher)).
-		AddListen(&core.NetworkInet64{Port: 7788}).
 		WaitType(config.ASYNC)
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc,
@@ -29,6 +27,6 @@ func main() {
 		<-sc
 		server.Stop()
 	}()
-	server.Sync()
+	_ = server.Sync()
 	server.Join()
 }
