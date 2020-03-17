@@ -17,7 +17,7 @@ func main() {
 		})
 	}).
 		SetServerSocketChannel(core.Factory.NewParentChannelInstance()).
-		Option(&config.GetFromDefaultStrategy{}).
+		Option(config.GetConfig{}.Init(config.LineDecoder, config.DefaultFetcher)).
 		AddListen(&core.NetworkInet64{Port: 7788}).
 		WaitType(config.ASYNC)
 	sc := make(chan os.Signal, 1)
