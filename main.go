@@ -10,13 +10,14 @@ import (
 )
 
 func main() {
+	c := config.GetConfig{}
 	server := core.NewConcurrentNet()
 	server.OnChannelConnect(func(c core.Channel, p core.Pipeline) {
 		p.AddLast(func(d core.Data) core.Data {
 			return d
 		})
 	}).
-		Option(config.GetConfig{}.Init(config.LineDecoder, config.DefaultFetcher)).
+		Option(c.Init(config.LineDecoder, config.DefaultFetcher)).
 		WaitType(config.ASYNC)
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc,
