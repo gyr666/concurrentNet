@@ -13,13 +13,7 @@ type ChannelInCallback func(c Channel, p Pipeline)
 
 type Server interface {
 	OnChannelConnect(ChannelInCallback) Server
-<<<<<<< HEAD
-	SetServerSocketChannel(ParentChannel) Server
 	Option(*config.GetConfig) Server
-	AddListen(*NetworkInet64) Server
-=======
-	Option(config.ConfigStrategy) Server
->>>>>>> master
 	WaitType(config.WaitType) Server
 	RegObserve(ServerObserve) Server
 	Stop()
@@ -57,17 +51,8 @@ func (s *ServerImpl) OnChannelConnect(c ChannelInCallback) Server {
 	return s
 }
 
-<<<<<<< HEAD
-func (s *ServerImpl) SetServerSocketChannel(i ParentChannel) Server {
-	s.i = i
-	return s
-}
-
 func (s *ServerImpl) Option(strategy *config.GetConfig) Server {
-=======
-func (s *ServerImpl) Option(strategy config.GetConfig) Server {
->>>>>>> master
-	s.cfj = strategy.Get()
+	s.cfj = *strategy.Get()
 	return s
 }
 
@@ -118,7 +103,6 @@ func (s *ServerImpl) Sync() error {
 	s.status = RUNNING
 	s.lk.Unlock()
 	s.o.OnRunning(s.n)
-
 	s.Join()
 	return nil
 }
@@ -160,37 +144,5 @@ func (s *ServerImpl) startLoops() (err error) {
 	if err != nil {
 		return
 	}
-	return nil
-}
-
-func (s *ServerImpl) startLoops() error {
-	var lps []Loop
-	cpuNum := runtime.NumCPU()
-	for i := 0; i < cpuNum; i++ {
-		slp, err := NewSubLoop()
-		if err != nil {
-			return err
-		}
-		lps = append(lps, slp)
-	}
-	mlp, err := NewMainLoop()
-	if err != nil {
-		return err
-	}
-	lps = append(lps, mlp)
-
-	//To make mlp at the first of the loopGroup , when use iterate close loops , will close mlp first
-	for i := len(lps) - 1; i >= 0; i-- {
-		s.lg.registe(lps[i])
-	}
-
-	s.lg.iterate(func(lp Loop) bool {
-		s.wg.Add(1)
-		go func() {
-			lp.start()
-			s.wg.Done()
-		}()
-		return true
-	})
 	return nil
 }
