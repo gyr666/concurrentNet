@@ -2,6 +2,7 @@ package threading
 
 import (
 	"sync"
+	"time"
 
 	"gunplan.top/concurrentNet/util"
 )
@@ -11,7 +12,7 @@ type StealPool interface {
 	PoolExecutor
 	Status() PoolState
 	Init(core int, w int, strategy func(interface{}))
-	WaitForStop()
+	Join()
 }
 
 type stealPoolImpl struct {
@@ -69,19 +70,27 @@ func (t *stealPoolImpl) LaunchWork(i int) {
 
 			case ShutdownNow:
 				t.controlChannel <- op
-				fallthrough
-
-			case ShutdownAny:
 				t.g.Done()
 				return
 			}
 		default:
-			task, ok := <-t.workQueues[t.index.Next()]
+			t.consumeOther()
+		}
+	}
+}
+
+func (t *stealPoolImpl) consumeOther() {
+	for {
+		select {
+		case task, ok := <-t.workQueues[t.index.Next()]:
 			if ok {
 				task.rev <- task.t(task.param...)
 			}
+		case <-time.After(10 * time.Microsecond):
+			continue
 		}
 	}
+
 }
 
 func (t *stealPoolImpl) consumeRemain(i int) {
@@ -109,16 +118,12 @@ func (t *stealPoolImpl) ShutdownNow() {
 	t.waitStop(ShutdownNow)
 }
 
-func (t *stealPoolImpl) ShutdownAny() {
-	t.controlChannel <- ShutdownAny
-}
-
 func (t *stealPoolImpl) Shutdown() {
 	t.waitStop(SHUTDOWN)
 }
 
-func (t *stealPoolImpl) WaitForStop() {
-
+func (t *stealPoolImpl) Join() {
+	t.g.Wait()
 }
 func (t *stealPoolImpl) waitStop(c ControlType) {
 	t.status.whenThreadStopping()

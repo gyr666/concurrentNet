@@ -51,9 +51,7 @@ func (t *threadPoolImpl) LaunchWork() {
 			// control unit
 		case op := <-t.controlChannel:
 			switch op {
-
 			case SHUTDOWN:
-				t.controlChannel <- op
 				if len(t.workQueue) != 0 {
 					t.consumeRemain()
 				}
@@ -61,9 +59,6 @@ func (t *threadPoolImpl) LaunchWork() {
 
 			case ShutdownNow:
 				t.controlChannel <- op
-				fallthrough
-
-			case ShutdownAny:
 				t.g.Done()
 				return
 			}
@@ -104,10 +99,6 @@ func (t *threadPoolImpl) Shutdown() {
 func (t *threadPoolImpl) ShutdownNow() {
 	close(t.workQueue)
 	t.waitStop(ShutdownNow)
-}
-
-func (t *threadPoolImpl) ShutdownAny() {
-	t.controlChannel <- ShutdownAny
 }
 
 func (t *threadPoolImpl) waitStop(c ControlType) {
