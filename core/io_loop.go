@@ -14,8 +14,7 @@ type ioLoop struct {
 	index    int
 	lk       sync.Mutex
 	alloc    buffer.Allocator
-
-	l Pipeline
+	l        Pipeline
 }
 
 func NewIOLoop(index int, alloc buffer.Allocator) (*ioLoop, error) {
