@@ -39,7 +39,6 @@ type channelImpl struct {
 	a        buffer.Allocator
 	cc       ChannelCache
 	fd       int
-
 	l        Pipeline
 	pool     threading.ThreadPool
 	inCache  buffer.ByteBuffer
