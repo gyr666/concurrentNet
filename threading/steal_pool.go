@@ -70,9 +70,6 @@ func (t *stealPoolImpl) LaunchWork(i int) {
 
 			case ShutdownNow:
 				t.controlChannel <- op
-				fallthrough
-
-			case ShutdownAny:
 				t.g.Done()
 				return
 			}
@@ -119,10 +116,6 @@ func (t *stealPoolImpl) ShutdownNow() {
 		close(t.workQueues[i])
 	}
 	t.waitStop(ShutdownNow)
-}
-
-func (t *stealPoolImpl) ShutdownAny() {
-	t.controlChannel <- ShutdownAny
 }
 
 func (t *stealPoolImpl) Shutdown() {

@@ -25,8 +25,6 @@ type Launcher interface {
 	Shutdown()
 	// showdown right away. pool forbidden execute new works, and all of works in queue
 	ShutdownNow()
-	// shutdown any of thread
-	ShutdownAny()
 }
 
 type Task struct {
