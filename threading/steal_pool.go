@@ -52,9 +52,11 @@ func (t *stealPoolImpl) Boot() {
 func (t *stealPoolImpl) LaunchWork(i int) {
 	for {
 		select {
-		case task := <-t.workQueues[i]:
+		case task, ok := <-t.workQueues[i]:
 			// core execute unit
-			task.rev <- task.t(task.param...)
+			if ok {
+				task.rev <- task.t(task.param...)
+			}
 			// control unit
 		case op := <-t.controlChannel:
 			switch op {
@@ -73,6 +75,11 @@ func (t *stealPoolImpl) LaunchWork(i int) {
 			case STOPANY:
 				t.g.Done()
 				return
+			}
+		default:
+			task, ok := <-t.workQueues[t.index.Next()]
+			if ok {
+				task.rev <- task.t(task.param...)
 			}
 		}
 	}
@@ -93,6 +100,7 @@ func (t *stealPoolImpl) consumeRemain(i int) {
 			t.w.Unlock()
 		}
 	}
+	close(t.workQueues[i])
 }
 
 func (t *stealPoolImpl) ShutdownNow() {
@@ -107,7 +115,7 @@ func (t *stealPoolImpl) ShutdownAny() {
 }
 
 func (t *stealPoolImpl) Shutdown() {
-	t.controlChannel <- STOPANY
+	t.waitStop(SHUTDOWN)
 }
 
 func (t *stealPoolImpl) WaitForStop() {
