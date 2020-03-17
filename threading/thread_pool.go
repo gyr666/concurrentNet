@@ -24,12 +24,11 @@ type threadPoolImpl struct {
 }
 
 func (t *threadPoolImpl) Init(core, ext int, span time.Duration, w int, strategy func(interface{})) {
-	t.BasePool.Init()
+	t.BasePool.Init(t.addQueue0)
 	t.core = core
 	t.workQueue = make(chan *Task, w)
 	t.controlChannel = make(chan ControlType, t.core)
 	t.s = strategy
-	t.BasePool.addQueue = t.addQueue
 	t.g.Add(t.core)
 }
 
@@ -60,11 +59,11 @@ func (t *threadPoolImpl) LaunchWork() {
 				}
 				fallthrough
 
-			case SHUTDOWNNOW:
+			case ShutdownNow:
 				t.controlChannel <- op
 				fallthrough
 
-			case STOPANY:
+			case ShutdownAny:
 				t.g.Done()
 				return
 			}
@@ -104,11 +103,11 @@ func (t *threadPoolImpl) Shutdown() {
 
 func (t *threadPoolImpl) ShutdownNow() {
 	close(t.workQueue)
-	t.waitStop(SHUTDOWNNOW)
+	t.waitStop(ShutdownNow)
 }
 
 func (t *threadPoolImpl) ShutdownAny() {
-	t.controlChannel <- STOPANY
+	t.controlChannel <- ShutdownAny
 }
 
 func (t *threadPoolImpl) waitStop(c ControlType) {
@@ -121,13 +120,6 @@ func (t *threadPoolImpl) waitStop(c ControlType) {
 	}()
 }
 
-func (t *threadPoolImpl) addQueue(task *Task) {
-	switch t.status.get() {
-	case RUNNING:
-		t.workQueue <- task
-	case STOPPED:
-		fallthrough
-	case STOPPING:
-		panic("pool has been close")
-	}
+func (t *threadPoolImpl) addQueue0(task *Task) {
+	t.workQueue <- task
 }

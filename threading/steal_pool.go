@@ -27,7 +27,7 @@ type stealPoolImpl struct {
 }
 
 func (t *stealPoolImpl) Init(core int, w int, strategy func(interface{})) {
-	t.BasePool.Init()
+	t.BasePool.Init(t.addQueue0)
 	t.core = core
 	t.workQueues = make([]chan *Task, t.core)
 	for i := range t.workQueues {
@@ -37,7 +37,6 @@ func (t *stealPoolImpl) Init(core int, w int, strategy func(interface{})) {
 	t.s = strategy
 	t.index = util.Sequence{Max: core}
 	t.status = PoolStatusTransfer{}
-	t.BasePool.addQueue = t.addQueue
 	t.g.Add(t.core)
 }
 
@@ -68,11 +67,11 @@ func (t *stealPoolImpl) LaunchWork(i int) {
 				}
 				fallthrough
 
-			case SHUTDOWNNOW:
+			case ShutdownNow:
 				t.controlChannel <- op
 				fallthrough
 
-			case STOPANY:
+			case ShutdownAny:
 				t.g.Done()
 				return
 			}
@@ -107,11 +106,11 @@ func (t *stealPoolImpl) ShutdownNow() {
 	for i := range t.workQueues {
 		close(t.workQueues[i])
 	}
-	t.waitStop(SHUTDOWNNOW)
+	t.waitStop(ShutdownNow)
 }
 
 func (t *stealPoolImpl) ShutdownAny() {
-	t.controlChannel <- STOPANY
+	t.controlChannel <- ShutdownAny
 }
 
 func (t *stealPoolImpl) Shutdown() {
@@ -129,17 +128,6 @@ func (t *stealPoolImpl) waitStop(c ControlType) {
 		close(t.controlChannel)
 		t.status.whenThreadStopped()
 	}()
-}
-
-func (t *stealPoolImpl) addQueue(task *Task) {
-	switch t.status.get() {
-	case RUNNING:
-		t.addQueue0(task)
-	case STOPPED:
-		fallthrough
-	case STOPPING:
-		panic("pool has been close")
-	}
 }
 
 func (t *stealPoolImpl) addQueue0(task *Task) {
