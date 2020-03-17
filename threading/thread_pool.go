@@ -44,9 +44,11 @@ func (t *threadPoolImpl) Boot() {
 func (t *threadPoolImpl) LaunchWork() {
 	for {
 		select {
-		case task := <-t.workQueue:
+		case task, ok := <-t.workQueue:
 			// core execute unit
-			task.rev <- task.t(task.param...)
+			if ok {
+				task.rev <- task.t(task.param...)
+			}
 			// control unit
 		case op := <-t.controlChannel:
 			switch op {
