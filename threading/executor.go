@@ -20,7 +20,7 @@ type PoolExecutor interface {
 // Launcher, boot the Executor
 type Launcher interface {
 	// boot
-	Boot()
+	Boot() Launcher
 	// shutdown, pool forbidden execute new works, but execute all of works in queue
 	Shutdown()
 	// showdown right away. pool forbidden execute new works, and all of works in queue
@@ -39,3 +39,10 @@ func (t *Task) init() *Task {
 }
 
 type ExecTask func(...interface{}) interface{}
+
+type ThreadPool interface {
+	Launcher
+	PoolExecutor
+	Status() PoolState
+	Join()
+}
