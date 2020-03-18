@@ -1,8 +1,10 @@
 package config
 
+import "gunplan.top/concurrentNet/buffer"
+
 type GetFromFileStrategy struct {
 }
 
-func (g *GetFromFileStrategy) Fill(c *Config) error {
+func DefaultFetcher() buffer.ByteBuffer {
 	return nil
 }

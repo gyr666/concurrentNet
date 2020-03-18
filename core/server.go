@@ -9,11 +9,15 @@ import (
 	"gunplan.top/concurrentNet/config"
 )
 
+func NewConcurrentNet() Server {
+	return &ServerImpl{}
+}
+
 type ChannelInCallback func(c Channel, p Pipeline)
 
 type Server interface {
 	OnChannelConnect(ChannelInCallback) Server
-	Option(config.ConfigStrategy) Server
+	Option(*config.GetConfig) Server
 	WaitType(config.WaitType) Server
 	RegObserve(ServerObserve) Server
 	Stop()
@@ -51,8 +55,8 @@ func (s *ServerImpl) OnChannelConnect(c ChannelInCallback) Server {
 	return s
 }
 
-func (s *ServerImpl) Option(strategy config.GetConfig) Server {
-	s.cfj = strategy.Get()
+func (s *ServerImpl) Option(strategy *config.GetConfig) Server {
+	s.cfj = *strategy.Get()
 	return s
 }
 
@@ -95,7 +99,7 @@ func (s *ServerImpl) Sync() error {
 
 	s.alloc = buffer.NewLikedBufferAllocator()
 	if err := s.startLoops(); err != nil {
-		log.Println(err)
+		log.Fatal(err)
 		return errBoot
 	}
 
@@ -103,7 +107,6 @@ func (s *ServerImpl) Sync() error {
 	s.status = RUNNING
 	s.lk.Unlock()
 	s.o.OnRunning(s.n)
-
 	s.Join()
 	return nil
 }
@@ -145,37 +148,5 @@ func (s *ServerImpl) startLoops() (err error) {
 	if err != nil {
 		return
 	}
-	return nil
-}
-
-func (s *ServerImpl) startLoops() error {
-	var lps []Loop
-	cpuNum := runtime.NumCPU()
-	for i := 0; i < cpuNum; i++ {
-		slp, err := NewSubLoop()
-		if err != nil {
-			return err
-		}
-		lps = append(lps, slp)
-	}
-	mlp, err := NewMainLoop()
-	if err != nil {
-		return err
-	}
-	lps = append(lps, mlp)
-
-	//To make mlp at the first of the loopGroup , when use iterate close loops , will close mlp first
-	for i := len(lps) - 1; i >= 0; i-- {
-		s.lg.registe(lps[i])
-	}
-
-	s.lg.iterate(func(lp Loop) bool {
-		s.wg.Add(1)
-		go func() {
-			lp.start()
-			s.wg.Done()
-		}()
-		return true
-	})
 	return nil
 }
