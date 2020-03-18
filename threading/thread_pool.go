@@ -5,12 +5,9 @@ import (
 	"time"
 )
 
-type ThreadPool interface {
-	Launcher
-	PoolExecutor
-	Status() PoolState
-	Init(core, ext int, d time.Duration, w int, strategy func(interface{}))
-	WaitForStop()
+type StandThreadPool interface {
+	ThreadPool
+	Init(core, ext int, d time.Duration, w int, strategy func(interface{})) StandThreadPool
 }
 
 type threadPoolImpl struct {
@@ -23,21 +20,23 @@ type threadPoolImpl struct {
 	w              sync.Mutex
 }
 
-func (t *threadPoolImpl) Init(core, ext int, span time.Duration, w int, strategy func(interface{})) {
+func (t *threadPoolImpl) Init(core, ext int, span time.Duration, w int, strategy func(interface{})) StandThreadPool {
 	t.BasePool.Init(t.addQueue0)
 	t.core = core
 	t.workQueue = make(chan *Task, w)
 	t.controlChannel = make(chan ControlType, t.core)
 	t.s = strategy
 	t.g.Add(t.core)
+	return t
 }
 
-func (t *threadPoolImpl) Boot() {
+func (t *threadPoolImpl) Boot() Launcher {
 	t.status.whenThreadBooting()
 	for i := 0; i < t.core; i++ {
 		go t.LaunchWork()
 	}
 	t.status.whenThreadBooted()
+	return t
 }
 
 func (t *threadPoolImpl) LaunchWork() {
@@ -88,7 +87,7 @@ func (t *threadPoolImpl) LaunchWorkExt() {
 	t.LaunchWork()
 }
 
-func (t *threadPoolImpl) WaitForStop() {
+func (t *threadPoolImpl) Join() {
 	t.g.Wait()
 }
 
