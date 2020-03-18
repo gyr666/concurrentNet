@@ -3,6 +3,7 @@ on: [push]
 jobs:
   pre-build:
     name: Create env
+    runs-on: Ubuntu-latest
     steps:
       - name: Set up Go 1.13.5
         uses: actions/setup-go@v1
