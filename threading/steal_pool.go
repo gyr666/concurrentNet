@@ -8,11 +8,8 @@ import (
 )
 
 type StealPool interface {
-	Launcher
-	PoolExecutor
-	Status() PoolState
-	Init(core int, w int, strategy func(interface{}))
-	Join()
+	ThreadPool
+	Init(core int, w int, strategy func(interface{})) StealPool
 }
 
 type stealPoolImpl struct {
@@ -27,7 +24,7 @@ type stealPoolImpl struct {
 	w              sync.Mutex
 }
 
-func (t *stealPoolImpl) Init(core int, w int, strategy func(interface{})) {
+func (t *stealPoolImpl) Init(core int, w int, strategy func(interface{})) StealPool {
 	t.BasePool.Init(t.addQueue0)
 	t.core = core
 	t.workQueues = make([]chan *Task, t.core)
@@ -39,14 +36,16 @@ func (t *stealPoolImpl) Init(core int, w int, strategy func(interface{})) {
 	t.index = util.Sequence{Max: core}
 	t.status = PoolStatusTransfer{}
 	t.g.Add(t.core)
+	return t
 }
 
-func (t *stealPoolImpl) Boot() {
+func (t *stealPoolImpl) Boot() Launcher {
 	t.status.whenThreadBooting()
 	for i := 0; i < t.core; i++ {
 		go t.LaunchWork(i)
 	}
 	t.status.whenThreadBooted()
+	return t
 }
 
 func (t *stealPoolImpl) LaunchWork(i int) {
