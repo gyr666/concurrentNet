@@ -1,7 +1,8 @@
 name: Go
 on: [push]
 jobs:
-
+  pre-build:
+    name:
   build:
     name: Build
     runs-on: Ubuntu-latest
