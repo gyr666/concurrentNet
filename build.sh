@@ -1,3 +1,4 @@
 #!/usr/bin/env bash
 
-make Lin
+make linux
+sudo docker build -t concurrent/ubuntu:v1 .
