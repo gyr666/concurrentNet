@@ -1,5 +1,11 @@
 package core
 
+import "gunplan.top/concurrentNet/buffer"
+
+func NewIOLoopGroup() *ioLoopGroup {
+	return &ioLoopGroup{}
+}
+
 type ioLoopGroup struct {
 	loops []*ioLoop
 	index int
@@ -7,6 +13,17 @@ type ioLoopGroup struct {
 
 func (g *ioLoopGroup) registe(lp *ioLoop) {
 	g.loops = append(g.loops, lp)
+}
+
+func (g *ioLoopGroup) create(sum int) error {
+	for i := 0; i < sum; i++ {
+		lp, err := NewIOLoop(i, buffer.NewLikedBufferAllocator())
+		if err != nil {
+			return err
+		}
+		g.registe(lp)
+	}
+	return nil
 }
 
 //for put new accept connection in ioLoop load balance

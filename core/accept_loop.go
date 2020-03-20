@@ -4,38 +4,56 @@ import (
 	"log"
 	"sync"
 
+	"gunplan.top/concurrentNet/threading"
+
 	"gunplan.top/concurrentNet/core/netpoll"
 )
 
-type acceptLoop struct {
+type eventLoop struct {
 	poller    *netpoll.Poller
 	lg        *ioLoopGroup
 	listeners map[int]listener
 	lk        sync.Mutex
 	active    bool
 	index     int
+	t         threading.ThreadPool
 	wg        sync.WaitGroup
+	h         ChannelInCallback
 }
 
-func NewAcceptLoop(lg *ioLoopGroup) (*acceptLoop, error) {
+func NewEventLoop(sum int, h ChannelInCallback) (*eventLoop, error) {
 	poller, err := netpoll.NewPoller()
+
 	if err != nil {
 		return nil, err
 	}
-	slp := &acceptLoop{
+
+	lg := NewIOLoopGroup()
+	err = lg.create(sum)
+	if err != nil {
+		return nil, err
+	}
+
+	slp := &eventLoop{
+		h:         h,
 		poller:    poller,
 		listeners: make(map[int]listener),
 		lg:        lg,
 		index:     -1,
+		t:         threading.CreateNewStealPool(sum, 2, nil),
 	}
 	return slp, nil
 }
 
-func (alp *acceptLoop) start() error {
-	return nil
+func (alp *eventLoop) start() error {
+	alp.lg.iterate(func(loop *ioLoop) bool {
+		alp.t.Exec(loop.start)
+		return true
+	})
+	return alp.poller.Polling(alp.eventHandler)
 }
 
-func (alp *acceptLoop) stop() {
+func (alp *eventLoop) stop() {
 	if err := alp.poller.Trigger(func() error {
 		return errLoopShutdown
 	}); err != nil {
@@ -48,19 +66,21 @@ func (alp *acceptLoop) stop() {
 	alp.wg.Wait()
 }
 
-func (alp *acceptLoop) close() {
+func (alp *eventLoop) close() {
 	for _, listener := range alp.listeners {
 		listener.close()
 	}
 	alp.poller.Close()
+	if alp.lg == nil {
+		return
+	}
 	alp.lg.iterate(func(lp *ioLoop) bool {
 		lp.close()
 		return true
 	})
-
 }
 
-func (alp *acceptLoop) eventHandler(fd int, ev uint32) error {
+func (alp *eventLoop) eventHandler(fd int, ev uint32) error {
 	//TODO accept
 	//nfd, sa, err := unix.Accept(fd)
 	//if err != nil {
