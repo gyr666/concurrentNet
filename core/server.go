@@ -34,9 +34,10 @@ type ServerImpl struct {
 	s      bool
 	once   sync.Once
 	lk     sync.Mutex
-	loop   *acceptLoop
 	alloc  buffer.Allocator
 	status ServerStatus
+	ilg    *ioLoopGroup
+	alp    *acceptLoop
 }
 
 func (s *ServerImpl) Init() Server {
@@ -79,8 +80,8 @@ func (s *ServerImpl) Stop() {
 func (s *ServerImpl) Join() {
 	<-s.u
 
-	s.loop.stop()
-	s.loop.close()
+	s.alp.stop()
+	s.alp.close()
 	if err := s.alloc.Destroy(); err != nil {
 		log.Println(err)
 	}
@@ -111,42 +112,44 @@ func (s *ServerImpl) Sync() error {
 	return nil
 }
 
-func (s *ServerImpl) startLoops() (err error) {
-	var (
-		lg  ioLoopGroup
-		alp *acceptLoop
-	)
-	defer func() {
-		if err != nil {
-			if alp != nil {
-				alp.close()
-			} else {
-				lg.iterate(func(lp *ioLoop) bool {
-					lp.close()
-					return true
-				})
-			}
-		}
-	}()
+func (s *ServerImpl) startLoops() error {
+	var err error = nil
+
+	defer func(err0 error) {
+		s.failClean(err0)
+	}(err)
 
 	var lp *ioLoop
 	cpuNum := runtime.NumCPU()
 	for i := 0; i < cpuNum; i++ {
 		lp, err = NewIOLoop(i, s.alloc)
 		if err != nil {
-			return
+			return err
 		}
-		lg.registe(lp)
+		s.ilg.registe(lp)
 	}
 
-	alp, err = NewAcceptLoop(&lg)
+	s.alp, err = NewAcceptLoop(s.ilg)
 	if err != nil {
-		return
+		return err
 	}
-	s.loop = alp
-	err = s.loop.start()
+	err = s.alp.start()
 	if err != nil {
-		return
+		return err
 	}
 	return nil
+}
+
+func (s *ServerImpl) failClean(err error) {
+	if err != nil {
+		if s.alp != nil {
+			s.alp.close()
+		}
+		if s.ilg != nil {
+			s.ilg.iterate(func(lp *ioLoop) bool {
+				lp.close()
+				return true
+			})
+		}
+	}
 }
