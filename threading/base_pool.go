@@ -20,29 +20,29 @@ func (b *BasePool) Execwr(f func() interface{}) Future {
 }
 
 func (b *BasePool) Execwp(f func(...interface{}), p ...interface{}) {
-	_Execwp(f, b.addQueue, p)
+	_Execwp(f, b.addQueue, p...)
 }
 
 func (b *BasePool) Execwpr(f func(...interface{}) interface{}, p ...interface{}) Future {
-	return _Execwpr(f, b.addQueue, p)
+	return _Execwpr(f, b.addQueue, p...)
 }
 
-func (t *BasePool) Status() PoolState {
-	return t.status.get()
+func (b *BasePool) Status() PoolState {
+	return b.status.get()
 }
 
-func (t *BasePool) addQueue(task *Task) {
-	switch t.status.get() {
+func (b *BasePool) addQueue(task *Task) {
+	switch b.status.get() {
 	case BOOTING:
 		fallthrough
 	case RUNNING:
-		t.addQueue0(task)
+		b.addQueue0(task)
 	case STOPPED:
 		fallthrough
 	case STOPPING:
 		panic("pool has been close")
 	case WAITING:
 		// spin add
-		t.addQueue(task)
+		b.addQueue(task)
 	}
 }

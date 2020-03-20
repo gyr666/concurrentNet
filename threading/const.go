@@ -4,7 +4,7 @@ type PoolState uint8
 type ControlType uint8
 
 const (
-	STOPPED  PoolState = 1
+	STOPPED  PoolState = 0
 	RUNNING  PoolState = 1 << 1
 	WAITING  PoolState = 1 << 2
 	STOPPING PoolState = 1 << 3

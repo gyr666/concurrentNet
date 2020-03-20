@@ -16,8 +16,8 @@ const DecoderTagName = "line"
 func LineDecoder(buffer buffer.ByteBuffer, config *Config) error {
 	res := buffer.FastMoveOut()
 	w := sync.WaitGroup{}
-	for _, v := range strings.Split(string(res), LineSpiltChar) {
-		w.Add(-1)
+	for _, v := range strings.Split(string(*res), LineSpiltChar) {
+		w.Add(1)
 		go parallel(v, config, &w)
 	}
 	w.Wait()
@@ -25,6 +25,10 @@ func LineDecoder(buffer buffer.ByteBuffer, config *Config) error {
 }
 
 func parallel(list string, config *Config, w *sync.WaitGroup) {
+	w.Done()
+	if strings.HasPrefix(list, "#") {
+		return
+	}
 	l := strings.Split(list, SpiltChar)
 	k := strings.TrimSpace(l[0])
 	v := strings.TrimSpace(l[1])
@@ -35,5 +39,5 @@ func parallel(list string, config *Config, w *sync.WaitGroup) {
 	} else if util.GetFieldTag(config, name, TypeName) == String {
 		util.GetFieldsFromNameAndSet(config, name, v)
 	}
-	w.Done()
+
 }

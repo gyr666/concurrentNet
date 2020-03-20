@@ -38,7 +38,8 @@ type ByteBuffer interface {
 	Size() uint64
 	AvailableReadSum() uint64
 	Convert()
-	FastMoveOut() []byte
+	FastMoveOut() *[]byte
+	FastMoveIn(*[]byte)
 	Mode() OperatorMode
 	ShiftRN(n uint64) error
 	ShiftWN(n uint64) error
@@ -124,8 +125,13 @@ func (b *BaseByteBuffer) AvailableReadSum() uint64 {
 	return b.WP - b.RP
 }
 
-func (b *BaseByteBuffer) FastMoveOut() []byte {
-	return b.s
+func (b *BaseByteBuffer) FastMoveOut() *[]byte {
+	return &b.s
+}
+
+func (b *BaseByteBuffer) FastMoveIn(bin *[]byte) {
+	b.capital = uint64(len(*bin))
+	b.s = *bin
 }
 
 func (b *BaseByteBuffer) GetRP() uint64 {

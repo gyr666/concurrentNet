@@ -10,7 +10,8 @@ import (
 )
 
 func NewConcurrentNet() Server {
-	return &ServerImpl{}
+	s := ServerImpl{}
+	return s.Init()
 }
 
 type ChannelInCallback func(c Channel, p Pipeline)
@@ -36,7 +37,7 @@ type ServerImpl struct {
 }
 
 func (s *ServerImpl) Init() Server {
-	s.BaseServer.r = s
+	s.BaseServer.init(s)
 	s.t = threading.CreateNewThreadPool(1, 0, 0, 1, nil)
 	s.o = &DefaultObserve{}
 	return s
