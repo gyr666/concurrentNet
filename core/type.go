@@ -1,7 +1,5 @@
 package core
 
-import "strings"
-
 type ChannelStatus uint8
 
 const (
@@ -22,19 +20,3 @@ const (
 	STOPPING
 	STOPPED
 )
-
-type NetworkInet64 struct {
-	network string
-	Address string
-}
-
-func parseAddress(addr string) (network, address string) {
-	network = "tcp"
-	address = addr
-	if strings.Contains(addr, "://") {
-		parts := strings.Split(addr, "://")
-		network = parts[0]
-		address = parts[1]
-	}
-	return
-}

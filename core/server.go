@@ -10,7 +10,7 @@ import (
 )
 
 func NewConcurrentNet() Server {
-	return &ServerImpl{}
+	return new(ServerImpl).Init()
 }
 
 type ChannelInCallback func(c Channel, p Pipeline)
@@ -28,7 +28,6 @@ type Server interface {
 type ServerImpl struct {
 	BaseServer
 	comp   threading.Future
-	n      []NetworkInet64
 	t      threading.ThreadPool
 	lk     sync.Mutex
 	status ServerStatus
@@ -36,7 +35,7 @@ type ServerImpl struct {
 }
 
 func (s *ServerImpl) Init() Server {
-	s.BaseServer.r = s
+	s.BaseServer.init(s)
 	s.t = threading.CreateNewThreadPool(1, 0, 0, 1, nil)
 	s.o = &DefaultObserve{}
 	return s
@@ -67,7 +66,7 @@ func (s *ServerImpl) Sync() error {
 	}, s.startLoops)
 
 	s.status = RUNNING
-	s.o.OnRunning(s.n)
+	s.o.OnRunning(s.cfj.Listen)
 
 	if s.cfj.WaitType == config.SYNC {
 		s.Join()

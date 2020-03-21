@@ -9,6 +9,10 @@ type BaseServer struct {
 	o   ServerObserve
 }
 
+func (s *BaseServer) init(r Server) {
+	s.r = r
+}
+
 func (s *BaseServer) OnChannelConnect(c ChannelInCallback) Server {
 	s.c = c
 	return s.r
@@ -26,5 +30,5 @@ func (s *BaseServer) WaitType(w config.WaitType) Server {
 
 func (s *BaseServer) RegObserve(o ServerObserve) Server {
 	s.o = o
-	return s
+	return s.r
 }

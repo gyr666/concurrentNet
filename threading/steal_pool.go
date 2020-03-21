@@ -14,7 +14,6 @@ type StealPool interface {
 
 type stealPoolImpl struct {
 	BasePool
-	status         PoolStatusTransfer
 	s              func(interface{})
 	core           int
 	index          util.Sequence

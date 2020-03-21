@@ -7,5 +7,5 @@ type Sequence struct {
 
 func (s *Sequence) Next() int {
 	s.now++
-	return int(s.now & uint64(s.Max))
+	return int(s.now & uint64(s.Max-1))
 }

@@ -1,10 +1,13 @@
 package core
 
-import "fmt"
+import (
+	"fmt"
+	"gunplan.top/concurrentNet/config"
+)
 
 type ServerObserve interface {
 	OnBooting()
-	OnRunning(l []NetworkInet64)
+	OnRunning(l config.NetworkInet64)
 	OnStopping()
 	OnStopped()
 }
@@ -16,7 +19,7 @@ func (d *DefaultObserve) OnBooting() {
 	fmt.Println("On Booting")
 }
 
-func (d *DefaultObserve) OnRunning(l []NetworkInet64) {
+func (d *DefaultObserve) OnRunning(l config.NetworkInet64) {
 	fmt.Printf("On Running \nlisten:%#v\n", l)
 }
 

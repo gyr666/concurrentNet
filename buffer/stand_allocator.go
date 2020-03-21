@@ -307,7 +307,11 @@ func (s *sByteBuffer) globalRP(now uint64) uint64 {
 	}
 }
 
-func (s *sByteBuffer) FastMoveOut() []byte {
+func (s *sByteBuffer) FastMoveOut() *[]byte {
 	panic("sByteBuffer method `FastMoveOut` not support!")
 	return nil
+}
+
+func (s *sByteBuffer) FastMoveIn(*[]byte) {
+	panic("sByteBuffer method `FastMoveIn` not support!")
 }
