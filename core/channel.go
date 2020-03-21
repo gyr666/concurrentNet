@@ -2,6 +2,7 @@ package core
 
 import (
 	"golang.org/x/sys/unix"
+	"gunplan.top/concurrentNet/config"
 
 	"gunplan.top/concurrentNet/buffer"
 	"gunplan.top/concurrentNet/threading"
@@ -18,7 +19,7 @@ type Channel interface {
 	buffer.Cached
 	Event
 	Id() uint64
-	Address() NetworkInet64
+	Address() config.NetworkInet64
 	Status() ChannelStatus
 	AddTrigger(TimeTrigger)
 	Write(buffer.ByteBuffer) error
@@ -33,7 +34,7 @@ func NewChannel() Channel {
 
 type channelImpl struct {
 	id       uint64
-	address  NetworkInet64
+	address  config.NetworkInet64
 	status   ChannelStatus
 	Triggers []TimeTrigger
 	a        buffer.Allocator
@@ -164,7 +165,7 @@ func (c *channelImpl) NetReset() {
 	c.call.PeerReset(c.id)
 }
 
-func (c *channelImpl) Address() NetworkInet64 {
+func (c *channelImpl) Address() config.NetworkInet64 {
 	return c.address
 }
 

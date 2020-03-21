@@ -22,6 +22,15 @@ func GetFieldTag(i interface{}, field, tagk string) string {
 	return ""
 }
 
-func GetFieldsFromNameAndSet(i interface{}, name string, v interface{}) {
-	reflect.ValueOf(i).Elem().FieldByName(name).Set(reflect.ValueOf(v))
+func GetFieldsFromNameAndSetInt(i interface{}, name string, v int) {
+	reflect.ValueOf(i).Elem().FieldByName(name).SetInt(int64(v))
+}
+
+func GetFieldsFromNameAndSetString(i interface{}, name string, v string) {
+	reflect.ValueOf(i).Elem().FieldByName(name).SetString(v)
+}
+
+func InvokeMapMethod(i interface{}, name string, v string) {
+	param := []reflect.Value{reflect.ValueOf(v)}
+	reflect.ValueOf(i).MethodByName(name).Call(param)
 }
