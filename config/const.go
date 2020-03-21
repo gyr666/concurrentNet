@@ -29,7 +29,7 @@ const (
 )
 
 type Config struct {
-	Backlog       uint8            `line:"backlog" _type:"number"`
+	Backlog       int64            `line:"backlog" _type:"number"`
 	BufferSize    uint16           `line:"buffer_size" _type:"number"`
 	AllocType     buffer.Allocator `line:"allocator"`
 	NetworkType   NetworkType      `line:"network_type" _type:"enum"`
@@ -48,7 +48,7 @@ func (c *Config) SetListen(in string) {
 type NetworkInet64 struct {
 	network string
 	Address string
-	port    int
+	Port    int
 }
 
 func parseAddress(addr string) *NetworkInet64 {
@@ -58,7 +58,7 @@ func parseAddress(addr string) *NetworkInet64 {
 		parts := strings.Split(addr, ":")
 		port := parts[len(parts)-1]
 		n.Address = addr[0 : len(addr)-len(port)]
-		n.port, _ = strconv.Atoi(port)
+		n.Port, _ = strconv.Atoi(port)
 	}
 	return n
 }

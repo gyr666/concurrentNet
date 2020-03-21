@@ -15,15 +15,11 @@ func (g *ioLoopGroup) registe(lp *ioLoop) {
 	g.loops = append(g.loops, lp)
 }
 
-func (g *ioLoopGroup) create(sum int) error {
+func (g *ioLoopGroup) create(sum int) *ioLoopGroup {
 	for i := 0; i < sum; i++ {
-		lp, err := NewIOLoop(i, buffer.NewLikedBufferAllocator())
-		if err != nil {
-			return err
-		}
+		lp := NewIOLoop(i, buffer.NewLikedBufferAllocator())
 		g.registe(lp)
 	}
-	return nil
 }
 
 //for put new accept connection in ioLoop load balance

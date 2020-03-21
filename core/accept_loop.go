@@ -1,6 +1,7 @@
 package core
 
 import (
+	"gunplan.top/concurrentNet/config"
 	"log"
 	"sync"
 
@@ -10,7 +11,7 @@ import (
 )
 
 type eventLoop struct {
-	poller    *netpoll.Poller
+	poll      netpoll.UnixPoll
 	lg        *ioLoopGroup
 	listeners map[int]listener
 	lk        sync.Mutex
@@ -19,58 +20,55 @@ type eventLoop struct {
 	t         threading.ThreadPool
 	wg        sync.WaitGroup
 	h         ChannelInCallback
+	sc        netpoll.ServerChannel
 }
 
-func NewEventLoop(sum int, h ChannelInCallback) (*eventLoop, error) {
-	poller, err := netpoll.NewPoller()
-
-	if err != nil {
-		return nil, err
-	}
-
-	lg := NewIOLoopGroup()
-	err = lg.create(sum)
-	if err != nil {
-		return nil, err
-	}
-
+func NewEventLoop(sum int, h ChannelInCallback, c *config.Config) (*eventLoop, error) {
+	sc := netpoll.NewServerChannel(c.Listen.Port, int(c.Backlog))
 	slp := &eventLoop{
+		sc:        sc,
 		h:         h,
-		poller:    poller,
+		poll:      netpoll.NewServerUnixPoll(sc),
 		listeners: make(map[int]listener),
-		lg:        lg,
+		lg:        NewIOLoopGroup().create(sum),
 		index:     -1,
 		t:         threading.CreateNewStealPool(sum, 2, nil),
 	}
+	slp.poll.Handle(nil)
 	return slp, nil
 }
 
-func (alp *eventLoop) start() error {
+func (alp *eventLoop) start() {
 	alp.lg.iterate(func(loop *ioLoop) bool {
 		alp.t.Exec(loop.start)
 		return true
 	})
-	return alp.poller.Polling(alp.eventHandler)
+	alp.poll.Select()
 }
 
 func (alp *eventLoop) stop() {
-	if err := alp.poller.Trigger(func() error {
+	if err := alp.polling.Trigger(func() error {
 		return errLoopShutdown
 	}); err != nil {
 		log.Printf("index:%d,%v\n", alp.index, err)
 	}
 	alp.lg.iterate(func(lp *ioLoop) bool {
-		lp.stop()
+		alp.t.Exec(lp.stop)
+		alp.wg.Done()
 		return true
 	})
 	alp.wg.Wait()
+}
+
+func (alp *eventLoop) addChannel(c Channel) {
+
 }
 
 func (alp *eventLoop) close() {
 	for _, listener := range alp.listeners {
 		listener.close()
 	}
-	alp.poller.Close()
+	alp.poll.Close()
 	if alp.lg == nil {
 		return
 	}
@@ -96,8 +94,8 @@ func (alp *eventLoop) eventHandler(fd int, ev uint32) error {
 	//
 	//channel := alp.factory.NewChannel(nfd, sa)
 	//
-	//lp.poller.Trigger(func() error {
-	//	if err := lp.poller.AddReader(nfd); err != nil {
+	//lp.polling.Trigger(func() error {
+	//	if err := lp.polling.AddReader(nfd); err != nil {
 	//		log.Println(err)
 	//		return nil
 	//	}

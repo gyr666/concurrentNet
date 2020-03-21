@@ -9,39 +9,43 @@ import (
 	"gunplan.top/concurrentNet/util"
 )
 
-type Poller struct {
+type EventCallback func(int, uint32) error
+
+type Polling struct {
+	c      EventCallback
 	pfd    int
 	wfd    int
 	wfdBuf []byte
 	queue  *util.Queue
 }
 
-func NewPoller() (*Poller, error) {
-	pfd, err0 := unix.EpollCreate1(0)
-	if err0 != nil {
-		return nil, err0
+func NewPolling(c EventCallback) *Polling {
+	pfd, err := unix.EpollCreate1(0)
+	if err != nil {
+		panic(err)
 	}
 	wfd, err := unix.Eventfd(0, 0)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
-	p := new(Poller)
+	p := new(Polling)
 	p.pfd = pfd
 	p.wfd = wfd
 	p.wfdBuf = make([]byte, 8)
+	p.c = c
 	p.queue = util.NewQueue()
 	if err = p.AddReader(p.wfd); err != nil {
-		return nil, err
+		panic(err)
 	}
-	return p, nil
+	return p
 }
 
-func (p *Poller) Close() {
+func (p *Polling) Close() {
 	_ = unix.Close(p.wfd)
 	_ = unix.Close(p.pfd)
 }
 
-func (p *Poller) Polling(callback func(int, uint32) error) error {
+func (p *Polling) Polling() error {
 	var wakeup bool
 	el := newEventList(InitEvents)
 	for {
@@ -52,7 +56,7 @@ func (p *Poller) Polling(callback func(int, uint32) error) error {
 		}
 		for i := 0; i < n; i++ {
 			if fd, events := int(el.events[i].Fd), el.events[i].Events; fd != p.wfd {
-				if err := callback(fd, events); err != nil {
+				if err := p.c(fd, events); err != nil {
 					log.Println(err)
 				}
 			} else {
@@ -74,10 +78,10 @@ func (p *Poller) Polling(callback func(int, uint32) error) error {
 
 var (
 	u uint64 = 1
-	b []byte = (*(*[8]byte)(unsafe.Pointer(&u)))[:]
+	b        = (*(*[8]byte)(unsafe.Pointer(&u)))[:]
 )
 
-func (p *Poller) Trigger(callback func() error) error {
+func (p *Polling) Trigger(callback func() error) error {
 	if num := p.queue.Push(callback); num == 1 {
 		_, err := unix.Write(p.wfd, b)
 		if err != nil {
@@ -93,26 +97,26 @@ const (
 	readWriteEvent = readEvent | writeEvent
 )
 
-func (p *Poller) AddReader(fd int) error {
+func (p *Polling) AddReader(fd int) error {
 	return unix.EpollCtl(p.pfd, unix.EPOLL_CTL_ADD, fd, &unix.EpollEvent{Fd: int32(fd), Events: readEvent})
 }
 
-func (p *Poller) AddWriter(fd int) error {
+func (p *Polling) AddWriter(fd int) error {
 	return unix.EpollCtl(p.pfd, unix.EPOLL_CTL_ADD, fd, &unix.EpollEvent{Fd: int32(fd), Events: writeEvent})
 }
 
-func (p *Poller) AddReadWriter(fd int) error {
+func (p *Polling) AddReadWriter(fd int) error {
 	return unix.EpollCtl(p.pfd, unix.EPOLL_CTL_ADD, fd, &unix.EpollEvent{Fd: int32(fd), Events: readWriteEvent})
 }
 
-func (p *Poller) ModReader(fd int) error {
+func (p *Polling) ModReader(fd int) error {
 	return unix.EpollCtl(p.pfd, unix.EPOLL_CTL_MOD, fd, &unix.EpollEvent{Fd: int32(fd), Events: readEvent})
 }
 
-func (p *Poller) ModWriter(fd int) error {
+func (p *Polling) ModWriter(fd int) error {
 	return unix.EpollCtl(p.pfd, unix.EPOLL_CTL_MOD, fd, &unix.EpollEvent{Fd: int32(fd), Events: writeEvent})
 }
 
-func (p *Poller) ModReadWriter(fd int) error {
+func (p *Polling) ModReadWriter(fd int) error {
 	return unix.EpollCtl(p.pfd, unix.EPOLL_CTL_MOD, fd, &unix.EpollEvent{Fd: int32(fd), Events: readWriteEvent})
 }

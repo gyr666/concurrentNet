@@ -81,7 +81,7 @@ func (s *ServerImpl) startLoops() error {
 		s.failClean(err0)
 	}(err)
 
-	s.alp, err = NewEventLoop(runtime.NumCPU(), s.c)
+	s.alp, err = NewEventLoop(runtime.NumCPU(), s.c, &s.cfj)
 	if err != nil {
 		return err
 	}
